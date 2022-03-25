@@ -21,7 +21,7 @@ class PriorityQueue(BaseQueue):
     def on_message(self, ch, method, properties, body):
         pass
 
-    def multi_pop(self, on_message_callback=None, auto_ack=False):
+    def m_pop(self, on_message_callback=None, auto_ack=False):
         if not on_message_callback:
             on_message_callback = self.on_message
         self.server.basic_consume(
