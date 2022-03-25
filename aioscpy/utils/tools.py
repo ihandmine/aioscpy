@@ -1,7 +1,19 @@
-# _*_ coding: utf-8 _*_
-
 import asyncio
+
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
+
+
+def to_bytes(text, encoding=None, errors='strict'):
+    """Return the binary representation of ``text``. If ``text``
+    is already a bytes object, return it as-is."""
+    if isinstance(text, bytes):
+        return text
+    if not isinstance(text, str):
+        raise TypeError('to_bytes must receive a str or bytes '
+                        'object, got %s' % type(text).__name__)
+    if encoding is None:
+        encoding = 'utf-8'
+    return text.encode(encoding, errors)
 
 
 async def call_helper(f, *args, **kwargs):
