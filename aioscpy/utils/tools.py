@@ -3,6 +3,56 @@ import asyncio
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
 
 
+def is_listlike(x):
+    """
+    >>> is_listlike("foo")
+    False
+    >>> is_listlike(5)
+    False
+    >>> is_listlike(b"foo")
+    False
+    >>> is_listlike([b"foo"])
+    True
+    >>> is_listlike((b"foo",))
+    True
+    >>> is_listlike({})
+    True
+    >>> is_listlike(set())
+    True
+    >>> is_listlike((x for x in range(3)))
+    True
+    >>> is_listlike(range(5))
+    True
+    """
+    return hasattr(x, "__iter__") and not isinstance(x, (str, bytes))
+
+
+def unique(list_, key=lambda x: x):
+    """efficient function to uniquify a list preserving item order"""
+    seen = set()
+    result = []
+    for item in list_:
+        seenkey = key(item)
+        if seenkey in seen:
+            continue
+        seen.add(seenkey)
+        result.append(item)
+    return result
+
+
+def to_unicode(text, encoding=None, errors='strict'):
+    """Return the unicode representation of a bytes object ``text``. If
+    ``text`` is already an unicode object, return it as-is."""
+    if isinstance(text, str):
+        return text
+    if not isinstance(text, (bytes, str)):
+        raise TypeError('to_unicode must receive a bytes or str '
+                        'object, got %s' % type(text).__name__)
+    if encoding is None:
+        encoding = 'utf-8'
+    return text.decode(encoding, errors)
+
+
 def to_bytes(text, encoding=None, errors='strict'):
     """Return the binary representation of ``text``. If ``text``
     is already a bytes object, return it as-is."""
