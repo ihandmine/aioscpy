@@ -4,8 +4,7 @@ import warnings
 from aioscpy import signals
 from aioscpy.http import Request
 from aioscpy.utils.trackref import object_ref
-# from scrapy.utils.url import url_is_from_spider
-# from scrapy.utils.deprecate import method_is_overridden
+from aioscpy.utils.tools import method_is_overridden
 
 
 class Spider(object_ref):
@@ -82,10 +81,6 @@ class Spider(object_ref):
     @classmethod
     def update_settings(cls, settings):
         settings.setdict(cls.custom_settings or {}, priority='spider')
-
-    @classmethod
-    def handles_request(cls, request):
-        return url_is_from_spider(request.url, cls)
 
     @staticmethod
     def close(spider, reason):
