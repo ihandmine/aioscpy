@@ -1,6 +1,6 @@
 import pika
 
-from message import BaseQueue
+from queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):

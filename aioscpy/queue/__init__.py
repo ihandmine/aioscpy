@@ -5,7 +5,7 @@ class BaseQueue(object):
 
     __slots__ = ["server", "key", "serializer"]
 
-    def __init__(self, server, key, serializer=None):
+    def __init__(self, server, key=None, serializer=None):
         if serializer is None:
             serializer = COMPAT_TYPE[serializer or "json"]
 
@@ -17,7 +17,7 @@ class BaseQueue(object):
                             % serializer)
 
         self.server = server
-        self.key = key
+        self.key = key or 'sp:requests'
         self.serializer = serializer
 
     def _encode_request(self, request: dict) -> bytes:

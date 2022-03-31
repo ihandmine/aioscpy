@@ -1,6 +1,6 @@
 from redis import ConnectionPool, StrictRedis
 
-from message import BaseQueue
+from queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):
