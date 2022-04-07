@@ -1,25 +1,17 @@
 import logging
-import warnings
 
 from aioscpy import signals
 from aioscpy.http import Request
 from aioscpy.utils.trackref import object_ref
-from aioscpy.utils.tools import method_is_overridden
 
 
 class Spider(object_ref):
-    """Base class for scrapy spiders. All spiders must inherit from this
-    class.
-    """
-
     name = None
     custom_settings = None
 
     def __init__(self, name=None, **kwargs):
         if name is not None:
             self.name = name
-        elif not getattr(self, 'name', None):
-            raise ValueError("%s must have a name" % type(self).__name__)
         self.__dict__.update(kwargs)
         if not hasattr(self, 'start_urls'):
             self.start_urls = []
@@ -30,12 +22,6 @@ class Spider(object_ref):
         return logging.LoggerAdapter(logger, {'spider': self})
 
     def log(self, message, level=logging.DEBUG, **kw):
-        """Log the given message at the given log level
-
-        This helper wraps a log call to the logger within the spider, but you
-        can use it directly (e.g. Spider.logger.info('msg')) or use any other
-        Python logger too.
-        """
         self.logger.log(level, message, **kw)
 
     @classmethod
@@ -47,32 +33,11 @@ class Spider(object_ref):
     def _set_crawler(self, crawler):
         self.crawler = crawler
         self.settings = crawler.settings
-        crawler.signals.connect(self.close, signals.spider_closed)
+        # crawler.signals.connect(self.close, signals.spider_closed)
 
     def start_requests(self):
-        cls = self.__class__
-        if not self.start_urls and hasattr(self, 'start_url'):
-            raise AttributeError(
-                "Crawling could not start: 'start_urls' not found "
-                "or empty (but found 'start_url' attribute instead, "
-                "did you miss an 's'?)")
-        if method_is_overridden(cls, Spider, 'make_requests_from_url'):
-            warnings.warn(
-                "Spider.make_requests_from_url method is deprecated; it "
-                "won't be called in future Scrapy releases. Please "
-                "override Spider.start_requests method instead (see %s.%s)." % (
-                    cls.__module__, cls.__name__
-                ),
-            )
-            for url in self.start_urls:
-                yield self.make_requests_from_url(url)
-        else:
-            for url in self.start_urls:
-                yield Request(url, dont_filter=True)
-
-    def make_requests_from_url(self, url):
-        """ This method is deprecated. """
-        return Request(url, dont_filter=True)
+        for url in self.start_urls:
+            yield Request(url, dont_filter=True)
 
     def parse(self, response):
         raise NotImplementedError(
