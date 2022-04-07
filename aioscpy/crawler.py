@@ -63,6 +63,10 @@ class Crawler:
 
 
 class CrawlerProcess:
+    crawlers = property(
+        lambda self: self._crawlers,
+        doc="Set of :class:`crawlers <aioscpy.crawler.Crawler>`"
+    )
 
     def __init__(self, settings=None, install_root_handler=True):
         if isinstance(settings, dict) or settings is None:
