@@ -5,6 +5,7 @@ from time import time
 
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
+from aioscpy.core.scraper import Scraper
 from aioscpy.http.request import Request
 from aioscpy.utils.misc import load_object
 from aioscpy.utils.tools import call_helper
