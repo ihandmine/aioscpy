@@ -1,7 +1,7 @@
 from typing import Generator
 from urllib.parse import urljoin
 
-from aioscpy.link import Link
+# from aioscpy.link import Link
 from aioscpy.http.request import Request
 from aioscpy.utils.trackref import object_ref
 from aioscpy.utils.common import obsolete_setter
@@ -127,10 +127,10 @@ class Response(object_ref):
         .. versionadded:: 2.0
            The *flags* parameter.
         """
-        if isinstance(url, Link):
-            url = url.url
-        elif url is None:
-            raise ValueError("url can't be None")
+        # if isinstance(url, Link):
+        #     url = url.url
+        # elif url is None:
+        #     raise ValueError("url can't be None")
         url = self.urljoin(url)
 
         return Request(

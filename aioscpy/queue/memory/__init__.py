@@ -1,7 +1,7 @@
-from _queue import spider_priority_queue, priority_queue
+from ._queue import spider_queue, memery_queue
 
 
 __all__ = [
-    spider_priority_queue,
-    priority_queue,
+    spider_queue,
+    memery_queue
 ]
