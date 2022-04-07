@@ -8,5 +8,5 @@ class MemoryScheduler(Scheduler):
     def from_crawler(cls, crawler):
         setting = crawler.setting
         _queue_cls = load_object(setting.get('SCHEDULER_PRIORITY_QUEUE'))
-        _queue = create_instance(_queue_cls)
+        _queue = create_instance(_queue_cls, setting, crawler)
         return cls(_queue)
