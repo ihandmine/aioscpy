@@ -5,7 +5,7 @@ from time import time
 
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
-from aioscpy.core.scraper import Scraper
+# from aioscpy.core.scraper import Scraper
 from aioscpy.http.request import Request
 from aioscpy.utils.misc import load_object
 from aioscpy.utils.tools import call_helper
@@ -60,7 +60,7 @@ class ExecutionEngine(object):
         self.scheduler_cls = load_object(self.settings['SCHEDULER'])
         downloader_cls = load_object(self.settings['DOWNLOADER'])
         self.downloader = downloader_cls(crawler)
-        self.scraper = Scraper(crawler)
+        # self.scraper = Scraper(crawler)
         self._spider_closed_callback = spider_closed_callback
 
     async def start(self, spider, start_requests=None):
@@ -101,11 +101,12 @@ class ExecutionEngine(object):
 
         if self.paused:
             return
-
         while self.lock and not self._needs_backout(spider) and self.lock:
             self.lock = False
             try:
-                request = await call_helper(slot.scheduler.next_request)
+                # request = await call_helper(slot.scheduler.next_request)
+                request = await slot.scheduler.next_request()
+                print(request)
                 if not request:
                     break
                 slot.add_request(request)
@@ -136,7 +137,7 @@ class ExecutionEngine(object):
                 not self.running
                 or self.slot.closing
                 or self.downloader.needs_backout()
-                or self.scraper.slot.needs_backout()
+                # or self.scraper.slot.needs_backout()
         )
 
     async def _handle_downloader_output(self, result, request, spider):
@@ -147,12 +148,13 @@ class ExecutionEngine(object):
         finally:
             self.slot.remove_request(request)
             asyncio.create_task(self._next_request(self.spider))
-        await self.scraper.enqueue_scrape(result, request, spider)
+        print(result)
+        # await self.scraper.enqueue_scrape(result, request, spider)
 
     async def spider_is_idle(self, spider):
-        if not self.scraper.slot.is_idle():
-            # scraper is not idle
-            return False
+        # if not self.scraper.slot.is_idle():
+        #     # scraper is not idle
+        #     return False
 
         if self.downloader.active:
             # downloader has pending requests
@@ -184,13 +186,16 @@ class ExecutionEngine(object):
         await call_helper(self.slot.scheduler.enqueue_request, request)
 
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
+        print(self.crawler.settings)
+        print(start_requests)
+
         scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
-        start_requests = await call_helper(self.scraper.spidermw.process_start_requests, start_requests, spider)
+        # start_requests = await call_helper(self.scraper.spidermw.process_start_requests, start_requests, spider)
         self.slot = Slot(start_requests, close_if_idle, scheduler)
         self.spider = spider
-        await call_helper(scheduler.open, spider)
-        await call_helper(self.scraper.open_spider, spider)
-        await call_helper(self.crawler.stats.open_spider, spider)
+        # await call_helper(scheduler.open, spider)
+        # await call_helper(self.scraper.open_spider, spider)
+        # await call_helper(self.crawler.stats.open_spider, spider)
         await self._next_request(spider)
         self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
 
@@ -225,11 +230,11 @@ class ExecutionEngine(object):
 
         await close_handler(self.downloader.close, errmsg='Downloader close failure')
 
-        await close_handler(self.scraper.close_spider, spider, errmsg='Scraper close failure')
+        # await close_handler(self.scraper.close_spider, spider, errmsg='Scraper close failure')
 
-        await close_handler(self.slot.scheduler.close, reason, errmsg='Scheduler close failure')
+        # await close_handler(self.slot.scheduler.close, reason, errmsg='Scheduler close failure')
 
-        await close_handler(self.crawler.stats.close_spider, spider, reason=reason, errmsg='Stats close failure')
+        # await close_handler(self.crawler.stats.close_spider, spider, reason=reason, errmsg='Stats close failure')
 
         logger.info("Spider closed (%(reason)s)", {'reason': reason}, extra={'spider': spider})
 
