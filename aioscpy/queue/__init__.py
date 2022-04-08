@@ -1,4 +1,4 @@
-from compat import COMPAT_TYPE
+from aioscpy.queue.compat import COMPAT_TYPE
 
 
 class BaseQueue(object):

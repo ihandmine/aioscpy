@@ -17,12 +17,12 @@ class PriorityQueue(BaseQueue):
         return self._decode_request(_item)
 
 
-async def memery_queue() -> PriorityQueue:
+def memory_queue() -> PriorityQueue:
     server = Queue()
     return PriorityQueue(server=server)
 
 
-spider_queue = memery_queue
+spider_queue = memory_queue
 
 
 """
