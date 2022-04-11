@@ -12,12 +12,12 @@ from textwrap import dedent
 
 from w3lib.html import replace_entities
 
-from scrapy.utils.datatypes import LocalWeakReferencedCache
-from scrapy.utils.python import flatten, to_unicode
-from scrapy.item import BaseItem
+# from scrapy.utils.datatypes import LocalWeakReferencedCache
+# from scrapy.utils.python import flatten, to_unicode
+# from scrapy.item import BaseItem
 
 
-_ITERABLE_SINGLE_VALUES = dict, BaseItem, str, bytes
+_ITERABLE_SINGLE_VALUES = dict, str, bytes
 
 
 def arg_to_iter(arg):
@@ -168,30 +168,30 @@ def set_environ(**kwargs):
                 os.environ[k] = v
 
 
-_generator_callbacks_cache = LocalWeakReferencedCache(limit=128)
+# _generator_callbacks_cache = LocalWeakReferencedCache(limit=128)
 
-
-def is_generator_with_return_value(callable):
-    """
-    Returns True if a callable is a generator function which includes a
-    'return' statement with a value different than None, False otherwise
-    """
-    if callable in _generator_callbacks_cache:
-        return _generator_callbacks_cache[callable]
-
-    def returns_none(return_node):
-        value = return_node.value
-        return value is None or isinstance(value, ast.NameConstant) and value.value is None
-
-    if inspect.isgeneratorfunction(callable):
-        tree = ast.parse(dedent(inspect.getsource(callable)))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Return) and not returns_none(node):
-                _generator_callbacks_cache[callable] = True
-                return _generator_callbacks_cache[callable]
-
-    _generator_callbacks_cache[callable] = False
-    return _generator_callbacks_cache[callable]
+#
+# def is_generator_with_return_value(callable):
+#     """
+#     Returns True if a callable is a generator function which includes a
+#     'return' statement with a value different than None, False otherwise
+#     """
+#     if callable in _generator_callbacks_cache:
+#         return _generator_callbacks_cache[callable]
+#
+#     def returns_none(return_node):
+#         value = return_node.value
+#         return value is None or isinstance(value, ast.NameConstant) and value.value is None
+#
+#     if inspect.isgeneratorfunction(callable):
+#         tree = ast.parse(dedent(inspect.getsource(callable)))
+#         for node in ast.walk(tree):
+#             if isinstance(node, ast.Return) and not returns_none(node):
+#                 _generator_callbacks_cache[callable] = True
+#                 return _generator_callbacks_cache[callable]
+#
+#     _generator_callbacks_cache[callable] = False
+#     return _generator_callbacks_cache[callable]
 
 
 def warn_on_generator_with_return_value(spider, callable):

@@ -8,11 +8,9 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
 SCHEDULER_PRIORITY_QUEUE = "aioscpy.queue.memory.memory_queue"
 DOWNLOADER = 'aioscpy.core.downloader.Downloader'
-# DOWNLOAD_HANDLERS_BASE = {
-#     'http': 'aioscpy.core.downloader.http.AioHttpDownloadHandler',
-#     'https': 'aioscpy.core.downloader.http.AioHttpDownloadHandler',
-# }
+ITEM_PROCESSOR = 'aioscpy.middleware.ItemPipelineManager'
 DOWNLOAD_DELAY = 0
+
 # message config
 RABBITMQ_TCP = {
     'host': '172.16.8.147',

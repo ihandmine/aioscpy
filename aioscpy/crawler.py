@@ -4,12 +4,22 @@ import warnings
 import asyncio
 import sys
 
+from aioscpy.utils.log import (
+    get_scrapy_root_handler,
+    install_scrapy_root_handler,
+    LogCounterHandler,
+    configure_logging,
+)
+
 from aioscpy.spider import Spider
+from aioscpy import signals
 from aioscpy.settings import overridden_settings
 from aioscpy.exceptions import ScrapyDeprecationWarning
 from aioscpy.utils.tools import async_generator_wrapper
 from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
+from aioscpy.signalmanager import SignalManager
+from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +35,18 @@ class Crawler:
         self.settings = settings.copy()
         self.spidercls.update_settings(self.settings)
 
+        self.signals = SignalManager(self)
+        handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL', 'INFO'))
+        # logging.root.addHandler(handler)
+
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings:\n%(settings)s",
                     {'settings': pprint.pformat(d)})
+
+        if get_scrapy_root_handler() is not None:
+            install_scrapy_root_handler(self.settings)
+        self.__remove_handler = lambda: logging.root.removeHandler(handler)
+        self.signals.connect(self.__remove_handler, signals.engine_stopped)
 
         self.settings.freeze()
         self.crawling = False
@@ -75,6 +94,8 @@ class CrawlerProcess:
         self._crawlers = set()
         self._active = set()
         self.bootstrap_failed = False
+        install_shutdown_handlers(self._signal_shutdown)
+        # configure_logging(self.settings, install_root_handler)
 
     def crawl(self, crawler_or_spidercls, *args, **kwargs):
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
@@ -119,9 +140,17 @@ class CrawlerProcess:
         asyncio.get_event_loop().stop()
 
     def _signal_shutdown(self, signum, _):
+        install_shutdown_handlers(self._signal_kill)
+        signame = signal_names[signum]
+        logger.info("Received %(signame)s, shutting down gracefully. Send again to force ",
+                    {'signame': signame})
         asyncio.create_task(self._graceful_stop_reactor())
 
     def _signal_kill(self, signum, _):
+        install_shutdown_handlers(signal.SIG_IGN)
+        signame = signal_names[signum]
+        logger.info('Received %(signame)s twice, forcing unclean shutdown',
+                    {'signame': signame})
         asyncio.create_task(self._stop_reactor())
 
     def start(self):

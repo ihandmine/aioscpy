@@ -18,7 +18,6 @@ class Request(object_ref):
                  priority=0,
                  dont_filter=False,
                  errback=None, flags=None, cb_kwargs=None):
-        print(111)
         self._encoding = encoding  # this one has to be set first
         self.method = str(method).upper()
         self._set_url(url)

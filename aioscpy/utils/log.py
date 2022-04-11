@@ -181,7 +181,7 @@ class LogCounterHandler(logging.Handler):
 
     def emit(self, record):
         sname = 'log_count/{}'.format(record.levelname)
-        self.crawler.stats.inc_value(sname)
+        # self.crawler.stats.inc_value(sname)
 
 
 def logformatter_adapter(logkws):

@@ -39,9 +39,11 @@ class Spider(object_ref):
         for url in self.start_urls:
             yield Request(url, dont_filter=True)
 
-    def parse(self, response):
-        raise NotImplementedError(
-            '{}.parse callback is not defined'.format(self.__class__.__name__))
+    async def _parse(self, response, **kwargs):
+        return self.parse(response)
+
+    async def parse(self, response):
+        raise NotImplementedError(f'{self.__class__.__name__}.parse callback is not defined')
 
     @classmethod
     def update_settings(cls, settings):
