@@ -17,7 +17,6 @@ class Scheduler(object):
 
     async def next_request(self):
         request = await self.queue.pop()
-        print(request)
         return request
 
     def __len__(self):

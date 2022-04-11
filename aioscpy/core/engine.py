@@ -106,7 +106,6 @@ class ExecutionEngine(object):
             try:
                 # request = await call_helper(slot.scheduler.next_request)
                 request = await slot.scheduler.next_request()
-                print(request)
                 if not request:
                     break
                 slot.add_request(request)
@@ -186,10 +185,14 @@ class ExecutionEngine(object):
         await call_helper(self.slot.scheduler.enqueue_request, request)
 
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
-        print(self.crawler.settings)
-        print(start_requests)
+        # print(self.crawler.settings)
+        # print(start_requests)
 
         scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
+
+        async for request in start_requests:
+            # print(request)
+            await call_helper(scheduler.enqueue_request, request)
         # start_requests = await call_helper(self.scraper.spidermw.process_start_requests, start_requests, spider)
         self.slot = Slot(start_requests, close_if_idle, scheduler)
         self.spider = spider
