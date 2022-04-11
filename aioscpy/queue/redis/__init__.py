@@ -1,5 +1,5 @@
-from _queue import spider_priority_queue, priority_queue
-from _queue_async import spider_aio_priority_queue, aio_priority_queue
+from ._queue import spider_priority_queue, priority_queue
+from ._queue_async import spider_aio_priority_queue, aio_priority_queue
 
 
 __all__ = [

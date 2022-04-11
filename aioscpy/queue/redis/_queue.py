@@ -1,6 +1,6 @@
 from redis import ConnectionPool, StrictRedis
 
-from queue import BaseQueue
+from aioscpy.queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):

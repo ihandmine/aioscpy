@@ -2,7 +2,7 @@ import aioredis
 
 from aioredis import Redis
 
-from queue import BaseQueue
+from aioscpy.queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):

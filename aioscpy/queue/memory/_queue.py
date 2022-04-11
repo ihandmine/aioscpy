@@ -4,13 +4,18 @@ from aioscpy.queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):
+
+    def __init__(self, server, serializer="pickle"):
+        super().__init__(server)
+        self.serializer = self.__compat__[serializer]
+
     def qsize(self) -> int:
         """Return the length of the queue"""
         return self.server.qsize()
 
     async def push(self, request: dict):
         data = self._encode_request(request)
-        await self.server.push(data)
+        await self.server.put(data)
 
     async def pop(self, timeout: int = 0) -> dict:
         _item = await self.server.get()

@@ -4,10 +4,11 @@ from aioscpy.queue.compat import COMPAT_TYPE
 class BaseQueue(object):
 
     __slots__ = ["server", "key", "serializer"]
+    __compat__ = COMPAT_TYPE
 
     def __init__(self, server, key=None, serializer=None):
         if serializer is None:
-            serializer = COMPAT_TYPE[serializer or "json"]
+            serializer = self.__compat__[serializer or "json"]
 
         if not hasattr(serializer, 'loads'):
             raise TypeError("serializer does not implement 'loads' function: %r"

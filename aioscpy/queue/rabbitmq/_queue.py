@@ -1,6 +1,6 @@
 import pika
 
-from queue import BaseQueue
+from aioscpy.queue import BaseQueue
 
 
 class PriorityQueue(BaseQueue):

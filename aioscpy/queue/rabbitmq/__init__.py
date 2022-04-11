@@ -1,4 +1,4 @@
-from _queue import spider_priority_queue, priority_queue
+from ._queue import spider_priority_queue, priority_queue
 
 
 __all__ = [
