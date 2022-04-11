@@ -1,6 +1,7 @@
 from contextlib import suppress
 from typing import Generator
 
+import re
 import parsel
 from w3lib.encoding import (html_body_declared_encoding, html_to_unicode,
                             http_content_type_encoding, resolve_encoding)
@@ -16,11 +17,22 @@ class TextResponse(Response):
     _DEFAULT_ENCODING = 'ascii'
 
     def __init__(self, *args, **kwargs):
-        self._encoding = kwargs.pop('encoding', None)
+        self._encoding = kwargs.pop('encoding', None) or "utf-8"
         self._cached_benc = None
         self._cached_ubody = None
         self._cached_selector = None
+        self.cookies = self._set_cookies(kwargs.pop("cookies", None))
         super(TextResponse, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def _set_cookies(cookies_raw):
+        cookies = {}
+        if cookies_raw is None:
+            return cookies
+        cookies_str = cookies_raw.output()
+        for cookie in re.findall(r'Set-Cookie: (.*?)=(.*?); Domain', cookies_str, re.S):
+            cookies[cookie[0]] = cookie[1]
+        return cookies
 
     def _set_url(self, url):
         if isinstance(url, str):
