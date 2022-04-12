@@ -3,11 +3,12 @@ from aioscpy.crawler import CrawlerProcess
 
 
 from baidu import BaiduSpider
+from httpbin import HttpBinSpider
 
 
 process = CrawlerProcess()
 
-# process.crawl(BaiduSpider)
+process.crawl(HttpBinSpider)
 process.crawl(BaiduSpider)
 
 process.start()

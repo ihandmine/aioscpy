@@ -3,7 +3,6 @@ from aioscpy.spider import Spider
 
 class BaiduSpider(Spider):
     name = 'baidu'
-    permanent = False
     custom_settings = {}
     start_urls = ['http://www.baidu.com/'] * 5
 
@@ -15,7 +14,3 @@ class BaiduSpider(Spider):
 
     async def process_item(self, item):
         print(item)
-
-    def spider_idle(self):
-        """跑完关闭爬虫"""
-        pass
