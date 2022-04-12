@@ -4,8 +4,8 @@ from collections import deque
 from datetime import datetime
 from time import time
 
-# from scrapy.resolver import dnscache
-# from scrapy.utils.httpobj import urlparse_cached
+from scrapy.resolver import dnscache
+from scrapy.utils.httpobj import urlparse_cached
 
 from aioscpy.http import Request, Response
 from aioscpy.middleware import DownloaderMiddlewareManager
@@ -83,11 +83,11 @@ class Downloader:
 
     async def fetch(self, request, spider, _handle_downloader_output):
         self.active.add(request)
-        # key, slot = self._get_slot(request, spider)
-        # request.meta[self.DOWNLOAD_SLOT] = key
-        conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
-        conc, delay = _get_concurrency_delay(conc, spider, self.settings)
-        slot = Slot(conc, delay, self.randomize_delay)
+        key, slot = self._get_slot(request, spider)
+        request.meta[self.DOWNLOAD_SLOT] = key
+        # conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
+        # conc, delay = _get_concurrency_delay(conc, spider, self.settings)
+        # slot = Slot(conc, delay, self.randomize_delay)
 
         slot.active.add(request)
         slot.queue.append((request, _handle_downloader_output))
@@ -143,10 +143,11 @@ class Downloader:
                 response.request = request
             asyncio.create_task(_handle_downloader_output(response, request, spider))
 
-    def close(self):
+    async def close(self):
         self._slot_gc_loop = False
         for slot in self.slots.values():
             slot.close()
+        await self.handlers.close()
 
     async def _slot_gc(self, age=60):
         mintime = time() - age
@@ -160,21 +161,21 @@ class Downloader:
     def needs_backout(self):
         return len(self.active) >= self.total_concurrency
 
-    # def _get_slot(self, request, spider):
-    #     # key = self._get_slot_key(request, spider)
-    #     if key not in self.slots:
-    #         conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
-    #         conc, delay = _get_concurrency_delay(conc, spider, self.settings)
-    #         self.slots[key] = Slot(conc, delay, self.randomize_delay)
-    #
-    #     return key, self.slots[key]
+    def _get_slot(self, request, spider):
+        key = self._get_slot_key(request, spider)
+        if key not in self.slots:
+            conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
+            conc, delay = _get_concurrency_delay(conc, spider, self.settings)
+            self.slots[key] = Slot(conc, delay, self.randomize_delay)
 
-    # def _get_slot_key(self, request, spider):
-    #     if self.DOWNLOAD_SLOT in request.meta:
-    #         return request.meta[self.DOWNLOAD_SLOT]
-    #
-    #     key = urlparse_cached(request).hostname or ''
-    #     if self.ip_concurrency:
-    #         key = dnscache.get(key, key)
-    #
-    #     return key
+        return key, self.slots[key]
+
+    def _get_slot_key(self, request, spider):
+        if self.DOWNLOAD_SLOT in request.meta:
+            return request.meta[self.DOWNLOAD_SLOT]
+
+        key = urlparse_cached(request).hostname or ''
+        if self.ip_concurrency:
+            key = dnscache.get(key, key)
+
+        return key
