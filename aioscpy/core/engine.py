@@ -110,10 +110,9 @@ class ExecutionEngine(object):
         while self.lock and not self._needs_backout(spider) and self.lock:
             self.lock = False
             try:
-                request = await call_helper(slot.scheduler.next_request)
-                # request = await slot.scheduler.next_request()
-                if not request:
+                if not await call_helper(slot.scheduler.has_pending_requests):
                     break
+                request = await call_helper(slot.scheduler.next_request)
                 slot.add_request(request)
                 await self.downloader.fetch(request, spider, self._handle_downloader_output)
             finally:
@@ -141,7 +140,7 @@ class ExecutionEngine(object):
         return (
                 not self.running
                 or self.slot.closing
-                # or self.downloader.needs_backout()
+                or self.downloader.needs_backout()
                 # or self.scraper.slot.needs_backout()
         )
 
