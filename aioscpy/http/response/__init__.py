@@ -9,7 +9,7 @@ from aioscpy.utils.common import obsolete_setter
 
 class Response(object_ref):
 
-    def __init__(self, url, status=200, headers=None, body=b'', flags=None, request=None, certificate=None):
+    def __init__(self, url, status=200, headers=None, body=b'', flags=None, request=None, certificate=None, _response=None):
         self.headers = headers or {}
         self.status = int(status)
         self._set_body(body)
@@ -17,6 +17,7 @@ class Response(object_ref):
         self.request = request
         self.flags = [] if flags is None else list(flags)
         self.certificate = certificate
+        self._response = _response
 
     @property
     def cb_kwargs(self):

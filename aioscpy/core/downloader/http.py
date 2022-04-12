@@ -67,7 +67,8 @@ class AioHttpDownloadHandler:
                             status=response.status,
                             headers=response.headers,
                             body=content,
-                            cookies=response.cookies)
+                            cookies=response.cookies,
+                            _response=response)
 
     async def close(self):
         if self.session is not None:

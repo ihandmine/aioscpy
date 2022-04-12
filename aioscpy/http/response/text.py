@@ -77,6 +77,10 @@ class TextResponse(Response):
             self._cached_ubody = html_to_unicode(charset, self.body)[1]
         return self._cached_ubody
 
+    @property
+    async def json(self):
+        return await self._response.json()
+
     @memoizemethod_noargs
     def _headers_encoding(self):
         content_type = self.headers.get(b'Content-Type', b'')
