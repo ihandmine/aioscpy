@@ -35,7 +35,7 @@ class Spider(object_ref):
         self.settings = crawler.settings
         # crawler.signals.connect(self.close, signals.spider_closed)
 
-    def start_requests(self):
+    async def start_requests(self):
         for url in self.start_urls:
             yield Request(url, dont_filter=True)
 
