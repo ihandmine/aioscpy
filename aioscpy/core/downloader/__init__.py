@@ -6,6 +6,7 @@ from time import time
 
 from scrapy.resolver import dnscache
 from scrapy.utils.httpobj import urlparse_cached
+from aioscpy.utils.tools import call_helper
 
 from aioscpy.http import Request, Response
 from aioscpy.middleware import DownloaderMiddlewareManager
@@ -124,14 +125,23 @@ class Downloader:
         response = None
         try:
             response = await self.middleware.process_request(spider, request)
+            process_request_method = getattr(spider, "process_request", None)
+            if process_request_method:
+                await call_helper(process_request_method, request)
             if response is None or isinstance(response, Request):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
         except (Exception, BaseException) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
+            process_exception_method = getattr(spider, "process_exception", None)
+            if process_exception_method:
+                await call_helper(process_exception_method, request, exc)
         else:
             try:
                 response = await self.middleware.process_response(spider, request, response)
+                process_response_method = getattr(spider, "process_response", None)
+                if process_response_method:
+                    await call_helper(process_response_method, request, response)
             except (Exception, BaseException) as exc:
                 response = exc
         finally:
