@@ -5,22 +5,22 @@ import sys
 import warnings
 from logging.config import dictConfig
 
-from twisted.python import log as twisted_log
-from twisted.python.failure import Failure
-
-import scrapy
-from scrapy.exceptions import ScrapyDeprecationWarning
-from scrapy.settings import Settings
-from scrapy.utils.versions import scrapy_components_versions
+# from twisted.python import log as twisted_log
+# from twisted.python.failure import Failure
+#
+# import scrapy
+# from scrapy.exceptions import ScrapyDeprecationWarning
+# from scrapy.settings import Settings
+# from scrapy.utils.versions import scrapy_components_versions
 
 
 logger = logging.getLogger(__name__)
 
 
-def failure_to_exc_info(failure):
-    """Extract exc_info from Failure instances"""
-    if isinstance(failure, Failure):
-        return (failure.type, failure.value, failure.getTracebackObject())
+# def failure_to_exc_info(failure):
+#     """Extract exc_info from Failure instances"""
+#     if isinstance(failure, Failure):
+#         return (failure.type, failure.value, failure.getTracebackObject())
 
 
 class TopLevelFormatter(logging.Filter):
@@ -86,8 +86,8 @@ def configure_logging(settings=None, install_root_handler=True):
         # Route warnings through python logging
         logging.captureWarnings(True)
 
-    observer = twisted_log.PythonLoggingObserver('twisted')
-    observer.start()
+    # observer = twisted_log.PythonLoggingObserver('twisted')
+    # observer.start()
 
     dictConfig(DEFAULT_LOGGING)
 
@@ -135,7 +135,7 @@ def _get_handler(settings):
         datefmt=settings.get('LOG_DATEFORMAT')
     )
     handler.setFormatter(formatter)
-    handler.setLevel(settings.get('LOG_LEVEL'))
+    handler.setLevel(settings.get('LOG_LEVEL', "INFO"))
     if settings.getbool('LOG_SHORT_NAMES'):
         handler.addFilter(TopLevelFormatter(['scrapy']))
     return handler

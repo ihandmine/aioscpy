@@ -1,8 +1,17 @@
 import asyncio
 import weakref
 
+from typing import Dict, Iterable, Optional, Tuple, Union
 from functools import wraps
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
+
+
+def referer_str(request) -> Optional[str]:
+    """ Return Referer HTTP header suitable for logging. """
+    referrer = request.headers.get('Referer')
+    if referrer is None:
+        return referrer
+    return to_unicode(referrer, errors='replace')
 
 
 def method_is_overridden(subclass, base_class, method_name):

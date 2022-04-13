@@ -10,6 +10,19 @@ SCHEDULER_PRIORITY_QUEUE = "aioscpy.queue.memory.memory_queue"
 DOWNLOADER = 'aioscpy.core.downloader.Downloader'
 ITEM_PROCESSOR = 'aioscpy.middleware.ItemPipelineManager'
 DOWNLOAD_DELAY = 0
+DOWNLOAD_TIMEOUT = 30
+
+# LOG
+LOG_ENABLED = True
+# LOG_ENCODING = 'utf-8'
+LOG_FORMATTER = 'aioscpy.logformatter.LogFormatter'
+LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
+# LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
+# LOG_STDOUT = False
+LOG_LEVEL = 'DEBUG'
+# LOG_FILE = None
+# LOG_FILE_APPEND = True
+# LOG_SHORT_NAMES = False
 
 # message config
 RABBITMQ_TCP = {

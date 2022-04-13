@@ -20,6 +20,7 @@ from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
 from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
+from aioscpy.utils.misc import load_object
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +38,19 @@ class Crawler:
 
         self.signals = SignalManager(self)
         handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL', 'INFO'))
-        # logging.root.addHandler(handler)
+        logging.root.addHandler(handler)
 
         d = dict(overridden_settings(self.settings))
-        logger.info("Overridden settings:\n%(settings)s",
-                    {'settings': pprint.pformat(d)})
+        logger.info("Overridden settings %(spider)s:\n%(settings)s",
+                    {'settings': pprint.pformat(d), "spider": spidercls.__name__})
 
         if get_scrapy_root_handler() is not None:
             install_scrapy_root_handler(self.settings)
         self.__remove_handler = lambda: logging.root.removeHandler(handler)
         self.signals.connect(self.__remove_handler, signals.engine_stopped)
+
+        lf_cls = load_object(self.settings['LOG_FORMATTER'])
+        self.logformatter = lf_cls.from_crawler(self)
 
         self.settings.freeze()
         self.crawling = False
@@ -95,7 +99,7 @@ class CrawlerProcess:
         self._active = set()
         self.bootstrap_failed = False
         install_shutdown_handlers(self._signal_shutdown)
-        # configure_logging(self.settings, install_root_handler)
+        configure_logging(self.settings, install_root_handler)
 
     def crawl(self, crawler_or_spidercls, *args, **kwargs):
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
