@@ -3,8 +3,8 @@ import pprint
 from asyncio import iscoroutinefunction
 from collections import defaultdict, deque
 
-from scrapy.exceptions import NotConfigured
-from scrapy.utils.misc import create_instance, load_object
+from aioscpy.exceptions import NotConfigured
+from aioscpy.utils.misc import create_instance, load_object
 
 logger = logging.getLogger(__name__)
 
