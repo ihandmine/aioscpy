@@ -8,4 +8,4 @@ class MemoryScheduler(Scheduler):
     def from_crawler(cls, crawler):
         setting = crawler.settings
         _queue = load_object(setting.get('SCHEDULER_PRIORITY_QUEUE'))
-        return cls(queue=_queue)
+        return cls(_queue_df=_queue)

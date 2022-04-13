@@ -5,6 +5,8 @@ from time import time
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
+from aioscpy.utils.log import (
+    logformatter_adapter)
 # from aioscpy.core.scraper import Scraper
 from aioscpy.http.request import Request
 from aioscpy.utils.misc import load_object
@@ -58,7 +60,7 @@ class ExecutionEngine(object):
         self.running = False
         self.paused = False
         self.signals = crawler.signals
-        # self.logformatter = crawler.logformatter
+        self.logformatter = crawler.logformatter
         self.scheduler_cls = load_object(self.settings['SCHEDULER'])
         downloader_cls = load_object(self.settings['DOWNLOADER'])
         itemproc_cls = load_object(self.settings['ITEM_PROCESSOR'])
@@ -149,6 +151,13 @@ class ExecutionEngine(object):
             if isinstance(result, Request):
                 await self.crawl(result, spider)
                 return
+            if isinstance(result, Response):
+                result.request = request
+                logkws = self.logformatter.crawled(request, result, spider)
+                if logkws is not None:
+                    logger.log(*logformatter_adapter(logkws), extra={'spider': spider})
+                await self.signals.send_catch_log(signals.response_received,
+                                                  response=result, request=request, spider=spider)
         finally:
             self.slot.remove_request(request)
             asyncio.create_task(self._next_request(self.spider))
@@ -230,14 +239,10 @@ class ExecutionEngine(object):
         logger.info("Spider opened", extra={'spider': spider})
 
         scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
-
-        async for request in start_requests:
-            # print(request)
-            await call_helper(scheduler.enqueue_request, request)
         # start_requests = await call_helper(self.scraper.spidermw.process_start_requests, start_requests, spider)
         self.slot = Slot(start_requests, close_if_idle, scheduler)
         self.spider = spider
-        # await call_helper(scheduler.open, spider)
+        await call_helper(scheduler.open, start_requests)
         # await call_helper(self.scraper.open_spider, spider)
         # await call_helper(self.crawler.stats.open_spider, spider)
         await self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)
@@ -300,5 +305,4 @@ class ExecutionEngine(object):
     async def heart_beat(self, delay, spider, slot):
         while not slot.closing:
             await asyncio.sleep(delay)
-            print(333333333333)
             asyncio.create_task(self._next_request(spider))
