@@ -8,6 +8,18 @@ new exceptions here without documenting them there.
 # Internal
 
 
+class StopDownload(Exception):
+    """
+    Stop the download of the body for a given response.
+    The 'fail' boolean parameter indicates whether or not the resulting partial response
+    should be handled by the request errback. Note that 'fail' is a keyword-only argument.
+    """
+
+    def __init__(self, *, fail=True):
+        super().__init__()
+        self.fail = fail
+
+
 class NotConfigured(Exception):
     """Indicates a missing configuration situation"""
     pass
