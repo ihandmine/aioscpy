@@ -2,6 +2,7 @@ import logging
 import pprint
 import warnings
 import asyncio
+import signal
 import sys
 
 from aioscpy.utils.log import (
@@ -37,8 +38,8 @@ class Crawler:
         self.spidercls.update_settings(self.settings)
 
         self.signals = SignalManager(self)
-        handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL', 'INFO'))
-        logging.root.addHandler(handler)
+        # handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL', 'INFO'))
+        # logging.root.addHandler(handler)
 
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings %(spider)s:\n%(settings)s",
@@ -46,8 +47,8 @@ class Crawler:
 
         if get_scrapy_root_handler() is not None:
             install_scrapy_root_handler(self.settings)
-        self.__remove_handler = lambda: logging.root.removeHandler(handler)
-        self.signals.connect(self.__remove_handler, signals.engine_stopped)
+        # self.__remove_handler = lambda: logging.root.removeHandler(handler)
+        # self.signals.connect(self.__remove_handler, signals.engine_stopped)
 
         lf_cls = load_object(self.settings['LOG_FORMATTER'])
         self.logformatter = lf_cls.from_crawler(self)
