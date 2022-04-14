@@ -1,11 +1,13 @@
 import asyncio
 import random
-from collections import deque
-from datetime import datetime
-from time import time
 
-from scrapy.resolver import dnscache
-from scrapy.utils.httpobj import urlparse_cached
+from time import time
+from datetime import datetime
+from collections import deque
+from aiohttp import ClientError, ClientTimeout
+from aiohttp.http_exceptions import HttpProcessingError
+
+from aioscpy.utils.othtypes import dnscache, urlparse_cached
 from aioscpy.utils.tools import call_helper
 
 from aioscpy.http import Request, Response
@@ -131,7 +133,7 @@ class Downloader:
             if response is None or isinstance(response, Request):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
-        except (Exception, BaseException) as exc:
+        except (ClientError, ClientTimeout, HttpProcessingError, Exception, BaseException) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
