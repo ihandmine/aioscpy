@@ -8,10 +8,9 @@ from logging.config import dictConfig
 # from twisted.python import log as twisted_log
 # from twisted.python.failure import Failure
 #
-# import scrapy
-# from scrapy.exceptions import ScrapyDeprecationWarning
-# from scrapy.settings import Settings
-# from scrapy.utils.versions import scrapy_components_versions
+import aioscpy
+from aioscpy.exceptions import ScrapyDeprecationWarning
+from aioscpy.settings import Settings
 
 
 logger = logging.getLogger(__name__)
@@ -59,29 +58,6 @@ DEFAULT_LOGGING = {
 
 
 def configure_logging(settings=None, install_root_handler=True):
-    """
-    Initialize logging defaults for Scrapy.
-
-    :param settings: settings used to create and configure a handler for the
-        root logger (default: None).
-    :type settings: dict, :class:`~scrapy.settings.Settings` object or ``None``
-
-    :param install_root_handler: whether to install root logging handler
-        (default: True)
-    :type install_root_handler: bool
-
-    This function does:
-
-    - Route warnings and twisted logging through Python standard logging
-    - Assign DEBUG and ERROR level to Scrapy and Twisted loggers respectively
-    - Route stdout to log if LOG_STDOUT setting is True
-
-    When ``install_root_handler`` is True (default), this function also
-    creates a handler for the root logger according to given settings
-    (see :ref:`topics-logging-settings`). You can override default options
-    using ``settings`` argument. When ``settings`` is empty or None, defaults
-    are used.
-    """
     if not sys.warnoptions:
         # Route warnings through python logging
         logging.captureWarnings(True)
@@ -143,13 +119,7 @@ def _get_handler(settings):
 
 def log_scrapy_info(settings):
     logger.info("Scrapy %(version)s started (bot: %(bot)s)",
-                {'version': scrapy.__version__, 'bot': settings['BOT_NAME']})
-    logger.info("Versions: %(versions)s",
-                {'versions': ", ".join("%s %s" % (name, version)
-                    for name, version in scrapy_components_versions()
-                    if name != "Scrapy")})
-    from twisted.internet import reactor
-    logger.debug("Using reactor: %s.%s", reactor.__module__, reactor.__class__.__name__)
+                {'version': aioscpy.__version__, 'bot': settings['BOT_NAME']})
 
 
 class StreamLogger(object):

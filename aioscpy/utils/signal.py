@@ -4,7 +4,7 @@ import logging
 
 from pydispatch.dispatcher import Anonymous, Any, disconnect, getAllReceivers, liveReceivers
 from pydispatch.robustapply import robustApply
-from scrapy.exceptions import StopDownload
+from aioscpy.exceptions import StopDownload
 
 logger = logging.getLogger(__name__)
 

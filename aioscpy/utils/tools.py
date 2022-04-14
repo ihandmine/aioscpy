@@ -156,16 +156,16 @@ def get_project_settings():
     import pickle
     import warnings
 
-    from scrapy.utils.conf import init_env
-    from aioscrapy.settings import AioSettings
-    from scrapy.exceptions import ScrapyDeprecationWarning
+    # from scrapy.utils.conf import init_env
+    from aioscpy.settings import Settings
+    from aioscpy.exceptions import ScrapyDeprecationWarning
 
     ENVVAR = 'SCRAPY_SETTINGS_MODULE'
 
-    if ENVVAR not in os.environ:
-        project = os.environ.get('SCRAPY_PROJECT', 'default')
-        init_env(project)
-    settings = AioSettings()
+    # if ENVVAR not in os.environ:
+    #     project = os.environ.get('SCRAPY_PROJECT', 'default')
+    #     init_env(project)
+    settings = Settings()
     settings_module_path = os.environ.get(ENVVAR)
     if settings_module_path:
         settings.setmodule(settings_module_path, priority='project')

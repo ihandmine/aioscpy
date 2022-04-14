@@ -194,16 +194,16 @@ def set_environ(**kwargs):
 #     return _generator_callbacks_cache[callable]
 
 
-def warn_on_generator_with_return_value(spider, callable):
-    """
-    Logs a warning if a callable is a generator function and includes
-    a 'return' statement with a value different than None
-    """
-    if is_generator_with_return_value(callable):
-        warnings.warn(
-            'The "{}.{}" method is a generator and includes a "return" statement with a '
-            'value different than None. This could lead to unexpected behaviour. Please see '
-            'https://docs.python.org/3/reference/simple_stmts.html#the-return-statement '
-            'for details about the semantics of the "return" statement within generators'
-            .format(spider.__class__.__name__, callable.__name__), stacklevel=2,
-        )
+# def warn_on_generator_with_return_value(spider, callable):
+#     """
+#     Logs a warning if a callable is a generator function and includes
+#     a 'return' statement with a value different than None
+#     """
+#     if is_generator_with_return_value(callable):
+#         warnings.warn(
+#             'The "{}.{}" method is a generator and includes a "return" statement with a '
+#             'value different than None. This could lead to unexpected behaviour. Please see '
+#             'https://docs.python.org/3/reference/simple_stmts.html#the-return-statement '
+#             'for details about the semantics of the "return" statement within generators'
+#             .format(spider.__class__.__name__, callable.__name__), stacklevel=2,
+#         )
