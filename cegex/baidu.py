@@ -1,3 +1,5 @@
+import asyncio
+
 from aioscpy.spider import Spider
 from anti_header import Header
 from pprint import pprint, pformat
@@ -22,4 +24,5 @@ class BaiduSpider(Spider):
         yield item
 
     async def process_item(self, item):
-        self.logger.info("%(item)s", {'item': pformat(item)})
+        pass
+        # self.logger.info("%(item)s", {'item': pformat(item)})

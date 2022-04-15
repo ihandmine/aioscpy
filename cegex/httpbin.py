@@ -1,3 +1,5 @@
+import asyncio
+
 from aioscpy.spider import Spider
 
 
@@ -10,7 +12,9 @@ class HttpBinSpider(Spider):
 
     async def parse(self, response):
         item = await response.json
+        await asyncio.sleep(2)
         yield item
 
     async def process_item(self, item):
-        self.logger.info(item)
+        pass
+        # self.logger.info(item)
