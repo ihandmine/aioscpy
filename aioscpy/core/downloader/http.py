@@ -17,8 +17,6 @@ class AioHttpDownloadHandler:
         self.settings = settings
         self.aiohttp_client_session_args = settings.get('AIOHTTP_CLIENT_SESSION_ARGS', {})
         self.verify_ssl = self.settings.get("VERIFY_SSL")
-        if sys.platform.startswith('win'):
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     @classmethod
     def from_settings(cls, settings):

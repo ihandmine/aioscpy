@@ -4,8 +4,6 @@ import random
 from time import time
 from datetime import datetime
 from collections import deque
-from aiohttp import ClientError, ClientTimeout
-from aiohttp.http_exceptions import HttpProcessingError
 
 from aioscpy.utils.othtypes import dnscache, urlparse_cached
 from aioscpy.utils.tools import call_helper
@@ -88,9 +86,6 @@ class Downloader:
         self.active.add(request)
         key, slot = self._get_slot(request, spider)
         request.meta[self.DOWNLOAD_SLOT] = key
-        # conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
-        # conc, delay = _get_concurrency_delay(conc, spider, self.settings)
-        # slot = Slot(conc, delay, self.randomize_delay)
 
         slot.active.add(request)
         slot.queue.append((request, _handle_downloader_output))
@@ -133,7 +128,7 @@ class Downloader:
             if response is None or isinstance(response, Request):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
-        except (ClientError, ClientTimeout, HttpProcessingError, Exception, BaseException) as exc:
+        except (Exception, BaseException) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
