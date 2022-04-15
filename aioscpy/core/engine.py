@@ -45,6 +45,7 @@ class Slot:
             if self.heartbeat:
                 self.heartbeat.cancel()
             self.closing.set_result(None)
+            # self.closing.cancel()
 
 
 class ExecutionEngine(object):
@@ -58,7 +59,6 @@ class ExecutionEngine(object):
         self.spider = None
         self.scheduler = None
         self.running = False
-        self.paused = False
         self.signals = crawler.signals
         self.logformatter = crawler.logformatter
         self.scheduler_cls = load_object(self.settings['SCHEDULER'])
@@ -73,15 +73,12 @@ class ExecutionEngine(object):
         self.start_time = time()
         await self.signals.send_catch_log_deferred(signal=signals.engine_started)
         self.running = True
-        self._closewait = asyncio.Future()
         await self.open_spider(spider, start_requests, close_if_idle=True)
-        await self._closewait
 
     async def stop(self):
         self.running = False
         await self._close_all_spiders()
         await self.signals.send_catch_log_deferred(signal=signals.engine_stopped)
-        self._closewait.set_result(True)
 
     async def close(self):
 
@@ -94,21 +91,11 @@ class ExecutionEngine(object):
         else:
             self.downloader.close()
 
-    def pause(self):
-        """Pause the execution engine"""
-        self.paused = True
-
-    def unpause(self):
-        """Resume the execution engine"""
-        self.paused = False
-
     async def _next_request(self, spider):
         slot = self.slot
         if not slot:
             return
 
-        if self.paused:
-            return
         while self.lock and not self._needs_backout(spider) and self.lock:
             self.lock = False
             try:
