@@ -16,7 +16,7 @@ from aioscpy.spider import Spider
 from aioscpy import signals
 from aioscpy.settings import overridden_settings
 from aioscpy.exceptions import ScrapyDeprecationWarning
-from aioscpy.utils.tools import async_generator_wrapper
+from aioscpy.utils.tools import async_generator_wrapper, install_event_loop_tips, task_await
 from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
@@ -57,6 +57,7 @@ class Crawler:
         self.crawling = False
         self.spider = self._create_spider(*args, **kwargs)
         self.engine = None
+        self._closewait = None
 
     async def crawl(self):
         if self.crawling:
@@ -67,6 +68,7 @@ class Crawler:
             self.engine = self._create_engine()
             start_requests = await async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
+            await task_await(self.stop_loop)
         except Exception as e:
             logger.exception(e)
             self.crawling = False
@@ -84,6 +86,10 @@ class Crawler:
         if self.crawling:
             self.crawling = False
             await self.engine.stop()
+        self._closewait = True
+
+    async def stop_loop(self):
+        return self._closewait
 
 
 class CrawlerProcess:
@@ -99,6 +105,7 @@ class CrawlerProcess:
         self._crawlers = set()
         self._active = set()
         self.bootstrap_failed = False
+        self._group = []
         install_shutdown_handlers(self._signal_shutdown)
         configure_logging(self.settings, install_root_handler)
 
@@ -136,13 +143,20 @@ class CrawlerProcess:
         for crawler in self.crawlers:
             self.active_crawler(crawler)
         while self._active:
-            await asyncio.gather(*self._active)
+            self._group.append(await asyncio.gather(*self._active, return_exceptions=True))
 
     async def _graceful_stop_reactor(self):
         await self.stop()
 
     async def _stop_reactor(self):
-        asyncio.get_event_loop().stop()
+        for task in self._active:
+            task.cancel()
+        # for crawler in self.crawlers:
+        #     crawler._closewait.cancel()
+        for group in self._group:
+            group.cancel()
+        await asyncio.sleep(1)
+        asyncio.get_running_loop().stop()
 
     def _signal_shutdown(self, signum, _):
         install_shutdown_handlers(self._signal_kill)
@@ -159,10 +173,8 @@ class CrawlerProcess:
         asyncio.create_task(self._stop_reactor())
 
     def start(self):
-        if not sys.platform.startswith('win'):
-            try:
-                import uvloop
-                asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-            except ImportError:
-                pass
+        # try:
+        install_event_loop_tips()
         asyncio.run(self.run())
+        # except:
+        #     pass

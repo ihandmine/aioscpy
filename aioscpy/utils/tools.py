@@ -1,9 +1,33 @@
 import asyncio
 import weakref
+import sys
 
 from typing import Dict, Iterable, Optional, Tuple, Union
 from functools import wraps
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
+
+
+async def task_await(callback=None, *args, **kwargs):
+    while 1:
+        loopit = await call_helper(callback, *args, **kwargs)
+        if loopit:
+            break
+        await asyncio.sleep(1)
+
+
+def install_event_loop_tips():
+    if sys.version_info[:2] == (3, 7):
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+    if sys.platform.startswith('win'):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    else:
+        try:
+            import uvloop
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        except:
+            pass
+    setattr(asyncio.sslproto._SSLProtocolTransport, "_start_tls_compatible", True)
 
 
 def referer_str(request) -> Optional[str]:
