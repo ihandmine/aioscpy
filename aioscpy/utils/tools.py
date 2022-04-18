@@ -4,15 +4,21 @@ import sys
 
 from typing import Dict, Iterable, Optional, Tuple, Union
 from functools import wraps
+from asyncio import events
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
 
 
-async def task_await(callback=None, *args, **kwargs):
-    while 1:
-        loopit = await call_helper(callback, *args, **kwargs)
-        if loopit:
-            break
-        await asyncio.sleep(1)
+async def call_create_task(f, *args, **kwargs):
+    try:
+        if events._get_running_loop():
+            await call_helper(asyncio.create_task, f(*args, **kwargs))
+    except:
+        pass
+
+
+async def task_await(cls, *args):
+    while not all([getattr(cls, arg, None) for arg in args]):
+        await asyncio.sleep(0.5)
 
 
 def install_event_loop_tips():
