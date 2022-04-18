@@ -51,13 +51,7 @@ class AioHttpDownloadHandler:
             kwargs["proxy"] = proxy
             logger.info(f"使用代理{proxy}抓取: {request.url}")
 
-            async with aiohttp.ClientSession(**self.aiohttp_client_session_args) as session:
-                async with session.request(request.method, request.url, **kwargs) as response:
-                    content = await response.read()
-
-        # 当不用代理的时候，session不关闭
-        else:
-            session = self.get_session(**self.aiohttp_client_session_args)
+        async with aiohttp.ClientSession(**self.aiohttp_client_session_args) as session:
             async with session.request(request.method, request.url, **kwargs) as response:
                 content = await response.read()
 

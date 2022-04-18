@@ -6,8 +6,8 @@ from datetime import datetime
 from collections import deque
 
 from aioscpy.utils.othtypes import dnscache, urlparse_cached
-from aioscpy.utils.tools import call_helper
-
+from aioscpy.utils.tools import call_helper, call_create_task
+from aioscpy import signals
 from aioscpy.http import Request, Response
 from aioscpy.middleware import DownloaderMiddlewareManager
 from aioscpy.core.downloader.http import AioHttpDownloadHandler
@@ -82,6 +82,8 @@ class Downloader:
         self._slot_gc_loop = True
         asyncio.create_task(self._slot_gc(60))
 
+        crawler.signals.connect(self.close, signals.engine_stopped)
+
     async def fetch(self, request, spider, _handle_downloader_output):
         self.active.add(request)
         key, slot = self._get_slot(request, spider)
@@ -89,7 +91,7 @@ class Downloader:
 
         slot.active.add(request)
         slot.queue.append((request, _handle_downloader_output))
-        asyncio.create_task(self._process_queue(spider, slot))
+        await call_create_task(self._process_queue, spider, slot)
 
     async def _process_queue(self, spider, slot):
         if slot.delay_run:
@@ -104,27 +106,28 @@ class Downloader:
                 slot.delay_run = True
                 await asyncio.sleep(penalty)
                 slot.delay_run = False
-                asyncio.create_task(self._process_queue(spider, slot))
+                await call_create_task(self._process_queue, spider, slot)
                 return
 
         # Process enqueued requests if there are free slots to transfer for this slot
         while slot.queue and slot.free_transfer_slots() > 0:
             slot.lastseen = now
             request, _handle_downloader_output = slot.queue.popleft()
-            asyncio.create_task(self._download(slot, request, spider, _handle_downloader_output))
+            await call_create_task(self._download, slot, request, spider, _handle_downloader_output)
+            # asyncio.create_task(self._download(slot, request, spider, _handle_downloader_output))
             # prevent burst if inter-request delays were configured
             if delay:
-                asyncio.create_task(self._process_queue(spider, slot))
+                await call_create_task(self._process_queue, spider, slot)
                 break
 
     async def _download(self, slot, request, spider, _handle_downloader_output):
         slot.transferring.add(request)
         response = None
+        response = await self.middleware.process_request(spider, request)
+        process_request_method = getattr(spider, "process_request", None)
+        if process_request_method:
+            await call_helper(process_request_method, request)
         try:
-            response = await self.middleware.process_request(spider, request)
-            process_request_method = getattr(spider, "process_request", None)
-            if process_request_method:
-                await call_helper(process_request_method, request)
             if response is None or isinstance(response, Request):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
@@ -145,16 +148,19 @@ class Downloader:
             slot.transferring.remove(request)
             slot.active.remove(request)
             self.active.remove(request)
-            asyncio.create_task(self._process_queue(spider, slot))
+            await call_create_task(self._process_queue, spider, slot)
             if isinstance(response, Response):
                 response.request = request
-            asyncio.create_task(_handle_downloader_output(response, request, spider))
+            await call_create_task(_handle_downloader_output, response, request, spider)
 
     async def close(self):
-        self._slot_gc_loop = False
-        for slot in self.slots.values():
-            slot.close()
-        await self.handlers.close()
+        try:
+            self._slot_gc_loop = False
+            for slot in self.slots.values():
+                slot.close()
+            await self.handlers.close()
+        except (asyncio.CancelledError, Exception, BaseException) as exc:
+            pass
 
     async def _slot_gc(self, age=60):
         mintime = time() - age
