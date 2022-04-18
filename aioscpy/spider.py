@@ -1,8 +1,8 @@
-import logging
 
 from aioscpy import signals
 from aioscpy.http import Request
 from aioscpy.utils.trackref import object_ref
+from aioscpy.utils.log import logger
 
 
 class Spider(object_ref):
@@ -18,10 +18,9 @@ class Spider(object_ref):
 
     @property
     def logger(self):
-        logger = logging.getLogger(self.name)
-        return logging.LoggerAdapter(logger, {'spider': self})
+        return logger
 
-    def log(self, message, level=logging.DEBUG, **kw):
+    def log(self, message, level='DEBUG', **kw):
         self.logger.log(level, message, **kw)
 
     @classmethod

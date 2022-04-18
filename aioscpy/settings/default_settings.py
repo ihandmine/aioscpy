@@ -1,4 +1,4 @@
-
+BOT_NAME = "default_bot"
 
 CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 8
@@ -20,7 +20,8 @@ LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
 # LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
 # LOG_STDOUT = False
 LOG_LEVEL = 'DEBUG'
-# LOG_FILE = None
+LOG_FILE = True
+LOG_FILENAME = "info.log"
 # LOG_FILE_APPEND = True
 # LOG_SHORT_NAMES = False
 

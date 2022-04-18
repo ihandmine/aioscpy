@@ -1,18 +1,14 @@
 import asyncio
-import logging
 
 from time import time
 
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
-from aioscpy.utils.log import logformatter_adapter
 from aioscpy.http.request import Request
 from aioscpy.utils.misc import load_object
 from aioscpy.utils.tools import call_helper, task_await
-
-
-logger = logging.getLogger(__name__)
+from aioscpy.utils.log import logger, logformatter_adapter
 
 
 class Slot:
@@ -139,8 +135,9 @@ class ExecutionEngine(object):
             if isinstance(result, Response):
                 result.request = request
                 logkws = self.logformatter.crawled(request, result, spider)
+                level, message, kwargs = logformatter_adapter(logkws)
                 if logkws is not None:
-                    logger.log(*logformatter_adapter(logkws), extra={'spider': spider})
+                    logger.log(level, message, **kwargs)
                 await self.signals.send_catch_log(signals.response_received,
                                                   response=result, request=request, spider=spider)
         finally:
@@ -220,7 +217,7 @@ class ExecutionEngine(object):
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
         if not self.has_capacity():
             raise RuntimeError("No free spider slot when opening %r" % spider.name)
-        logger.info("Spider opened(%(name)s)", {"name": spider.name}, extra={'spider': spider})
+        logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
         scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
         self.slot = Slot(start_requests, close_if_idle, scheduler)
@@ -246,8 +243,8 @@ class ExecutionEngine(object):
         except:
             pass
 
-        logger.info("Closing spider(%(name)s) (%(reason)s)",
-                    {'reason': reason, 'name': spider.name},
+        logger.info("Closing spider({name}) ({reason})",
+                    **{'reason': reason, 'name': spider.name},
                     extra={'spider': spider})
 
         async def close_handler(callback, *args, errmsg='', **kwargs):
@@ -272,7 +269,7 @@ class ExecutionEngine(object):
                             reason=reason, errmsg='Error while sending spider_close signal')
         # await close_handler(self.crawler.stats.close_spider, spider, reason=reason, errmsg='Stats close failure')
 
-        logger.info("Spider(%(name)s) closed (%(reason)s)", {'reason': reason, "name": spider.name}, extra={'spider': spider})
+        logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
 
         await close_handler(setattr, self, 'slot', None, errmsg='Error while unassigning slot')
 

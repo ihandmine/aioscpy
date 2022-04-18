@@ -1,13 +1,10 @@
 import asyncio
-import logging
 import ssl
-import sys
 import aiohttp
 
+from aioscpy.utils.log import logger
 from aioscpy.http import TextResponse
 from anti_header import Headers
-
-logger = logging.getLogger(__name__)
 
 
 class AioHttpDownloadHandler:

@@ -1,12 +1,11 @@
-import logging
 import pprint
+
 from asyncio import iscoroutinefunction
 from collections import defaultdict, deque
 
 from aioscpy.exceptions import NotConfigured
+from aioscpy.utils.log import logger
 from aioscpy.utils.misc import create_instance, load_object
-
-logger = logging.getLogger(__name__)
 
 
 class MiddlewareManager:
