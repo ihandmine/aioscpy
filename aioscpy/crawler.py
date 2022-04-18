@@ -1,21 +1,15 @@
 import logging
 import pprint
-import warnings
 import asyncio
 import signal
-import sys
 
 from aioscpy.utils.log import (
     get_scrapy_root_handler,
     install_scrapy_root_handler,
-    LogCounterHandler,
     configure_logging,
 )
 
-from aioscpy.spider import Spider
-from aioscpy import signals
 from aioscpy.settings import overridden_settings
-from aioscpy.exceptions import ScrapyDeprecationWarning
 from aioscpy.utils.tools import async_generator_wrapper, install_event_loop_tips, task_await
 from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
@@ -38,8 +32,6 @@ class Crawler:
         self.spidercls.update_settings(self.settings)
 
         self.signals = SignalManager(self)
-        # handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL', 'INFO'))
-        # logging.root.addHandler(handler)
 
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings %(spider)s:\n%(settings)s",
@@ -47,8 +39,6 @@ class Crawler:
 
         if get_scrapy_root_handler() is not None:
             install_scrapy_root_handler(self.settings)
-        # self.__remove_handler = lambda: logging.root.removeHandler(handler)
-        # self.signals.connect(self.__remove_handler, signals.engine_stopped)
 
         lf_cls = load_object(self.settings['LOG_FORMATTER'])
         self.logformatter = lf_cls.from_crawler(self)
@@ -68,7 +58,7 @@ class Crawler:
             self.engine = self._create_engine()
             start_requests = await async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
-            await task_await(self.stop_loop)
+            await task_await(self, "_closewait")
         except Exception as e:
             logger.exception(e)
             self.crawling = False
@@ -87,9 +77,6 @@ class Crawler:
             self.crawling = False
             await self.engine.stop()
         self._closewait = True
-
-    async def stop_loop(self):
-        return self._closewait
 
 
 class CrawlerProcess:
@@ -148,11 +135,9 @@ class CrawlerProcess:
     async def _graceful_stop_reactor(self):
         await self.stop()
 
-    async def _stop_reactor(self):
+    async def _force_stop_reactor(self):
         for task in self._active:
             task.cancel()
-        # for crawler in self.crawlers:
-        #     crawler._closewait.cancel()
         for group in self._group:
             group.cancel()
         await asyncio.sleep(1)
@@ -170,11 +155,8 @@ class CrawlerProcess:
         signame = signal_names[signum]
         logger.info('Received %(signame)s twice, forcing unclean shutdown',
                     {'signame': signame})
-        asyncio.create_task(self._stop_reactor())
+        asyncio.create_task(self._force_stop_reactor())
 
     def start(self):
-        # try:
         install_event_loop_tips()
         asyncio.run(self.run())
-        # except:
-        #     pass
