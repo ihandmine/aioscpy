@@ -49,7 +49,7 @@ class AioHttpDownloadHandler:
         proxy = request.meta.get("proxy")
         if proxy:
             kwargs["proxy"] = proxy
-            logger.info(f"使用代理{proxy}抓取: {request.url}")
+            logger.debug(f"use {proxy} crawling: {request.url}")
 
         async with aiohttp.ClientSession(**self.aiohttp_client_session_args) as session:
             async with session.request(request.method, request.url, **kwargs) as response:

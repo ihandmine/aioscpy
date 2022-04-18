@@ -34,8 +34,9 @@ class Crawler:
         self.signals = SignalManager(self)
 
         d = dict(overridden_settings(self.settings))
-        logger.info("Overridden settings %(spider)s:\n%(settings)s",
-                    {'settings': pprint.pformat(d), "spider": spidercls.__name__})
+        if d:
+            logger.info("Overridden settings %(spider)s:\n%(settings)s",
+                        {'settings': pprint.pformat(d), "spider": spidercls.__name__})
 
         if get_scrapy_root_handler() is not None:
             install_scrapy_root_handler(self.settings)
@@ -47,7 +48,7 @@ class Crawler:
         self.crawling = False
         self.spider = self._create_spider(*args, **kwargs)
         self.engine = None
-        self._closewait = None
+        self._close_wait = None
 
     async def crawl(self):
         if self.crawling:
@@ -58,7 +59,7 @@ class Crawler:
             self.engine = self._create_engine()
             start_requests = await async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
-            await task_await(self, "_closewait")
+            await task_await(self, "_close_wait")
         except Exception as e:
             logger.exception(e)
             self.crawling = False
@@ -76,7 +77,7 @@ class Crawler:
         if self.crawling:
             self.crawling = False
             await self.engine.stop()
-        self._closewait = True
+        self._close_wait = True
 
 
 class CrawlerProcess:
