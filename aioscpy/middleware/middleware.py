@@ -42,9 +42,10 @@ class MiddlewareManager:
                                    {'clsname': clsname, 'eargs': e.args[0]},
                                    extra={'crawler': crawler})
 
-        logger.info("Enabled %(componentname)ss:\n%(enabledlist)s",
+        logger.info("Enabled %(name)s %(componentname)ss:\n%(enabledlist)s",
                     {'componentname': cls.component_name,
-                     'enabledlist': pprint.pformat(enabled)},
+                     'enabledlist': pprint.pformat(enabled),
+                     'name': crawler.spider.name},
                     extra={'crawler': crawler})
         return cls(*middlewares)
 
