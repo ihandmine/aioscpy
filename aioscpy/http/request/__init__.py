@@ -2,10 +2,9 @@ from w3lib.url import safe_url_string
 
 from aioscpy.utils.common import obsolete_setter
 from aioscpy.utils.tools import to_bytes
-from aioscpy.utils.trackref import object_ref
 
 
-class Request(object_ref):
+class Request(object):
 
     def __init__(self, url,
                  callback=None,

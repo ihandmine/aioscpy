@@ -1,13 +1,11 @@
 from typing import Generator
 from urllib.parse import urljoin
 
-# from aioscpy.link import Link
 from aioscpy.http.request import Request
-from aioscpy.utils.trackref import object_ref
 from aioscpy.utils.common import obsolete_setter
 
 
-class Response(object_ref):
+class Response(object):
 
     def __init__(self, url, status=200, headers=None, body=b'', flags=None, request=None, certificate=None, _response=None):
         self.headers = headers or {}

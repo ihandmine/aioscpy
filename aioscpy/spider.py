@@ -1,11 +1,9 @@
-
 from aioscpy import signals
 from aioscpy.http import Request
-from aioscpy.utils.trackref import object_ref
 from aioscpy.utils.log import logger
 
 
-class Spider(object_ref):
+class Spider(object):
     name = None
     custom_settings = None
 
@@ -32,7 +30,7 @@ class Spider(object_ref):
     def _set_crawler(self, crawler):
         self.crawler = crawler
         self.settings = crawler.settings
-        # crawler.signals.connect(self.close, signals.spider_closed)
+        crawler.signals.connect(self.close, signals.spider_closed)
 
     async def start_requests(self):
         for url in self.start_urls:
