@@ -5,7 +5,7 @@ from time import time
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
-from aioscpy.http.request import Request
+from aioscpy.http import Request
 from aioscpy.utils.misc import load_object
 from aioscpy.utils.tools import call_helper, task_await
 from aioscpy.utils.log import logger, logformatter_adapter
