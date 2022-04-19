@@ -1,6 +1,6 @@
 from w3lib.url import safe_url_string
 
-from aioscpy.utils.common import obsolete_setter
+from aioscpy.utils.tools import obsolete_setter
 from aioscpy.utils.tools import to_bytes
 
 

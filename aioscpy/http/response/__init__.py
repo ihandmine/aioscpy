@@ -2,7 +2,7 @@ from typing import Generator
 from urllib.parse import urljoin
 
 from aioscpy.http.request import Request
-from aioscpy.utils.common import obsolete_setter
+from aioscpy.utils.tools import obsolete_setter
 
 
 class Response(object):
