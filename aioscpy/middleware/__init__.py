@@ -1,9 +1,8 @@
-from .middleware_downloader import DownloaderMiddlewareManager
-from .middleware_Itempipeline import ItemPipelineManager
-from .middleware_spider import SpiderMiddlewareManager
-from .middleware_extension import ExtensionManager
+from aioscpy.middleware.downloader import DownloaderMiddlewareManager
+from aioscpy.middleware.itempipeline import ItemPipelineManager
+
 
 __all__ = [
-    "DownloaderMiddlewareManager", "ItemPipelineManager",
-    "SpiderMiddlewareManager", "ExtensionManager"
+    "DownloaderMiddlewareManager",
+    "ItemPipelineManager",
 ]

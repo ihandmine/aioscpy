@@ -1,4 +1,4 @@
-from aioscpy.middleware.middleware import MiddlewareManager
+from aioscpy.middleware.manager import MiddlewareManager
 from aioscpy.utils.common import build_component_list
 
 

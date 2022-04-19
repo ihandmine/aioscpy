@@ -1,13 +1,9 @@
-import logging
 from asyncio import iscoroutinefunction
 
-from scrapy.exceptions import _InvalidOutput
-from scrapy.http import Request, Response
-from scrapy.utils.conf import build_component_list
-
-from .middleware import MiddlewareManager
-
-logger = logging.getLogger(__name__)
+from aioscpy.exceptions import _InvalidOutput
+from aioscpy.http import Request, Response
+from aioscpy.utils.common import build_component_list
+from aioscpy.middleware.manager import MiddlewareManager
 
 
 class DownloaderMiddlewareManager(MiddlewareManager):
