@@ -235,17 +235,15 @@ class ExecutionEngine(object):
 
     async def close_spider(self, spider, reason='cancelled'):
         """Close (cancel) spider and clear all its outstanding requests"""
-        try:
-            slot = self.slot
-            if slot and slot.closing:
-                return slot.closing
-            await slot.close()
-        except:
-            pass
+        slot = self.slot
+        if slot and slot.closing:
+            return slot.closing
 
         logger.info("Closing spider({name}) ({reason})",
                     **{'reason': reason, 'name': spider.name},
                     extra={'spider': spider})
+
+        await slot.close()
 
         async def close_handler(callback, *args, errmsg='', **kwargs):
             try:
@@ -253,21 +251,18 @@ class ExecutionEngine(object):
                     await callback(*args, **kwargs)
                 else:
                     callback(*args, **kwargs)
-            except (asyncio.CancelledError, Exception, BaseException) as e:
+            except (Exception, BaseException) as e:
                 logger.error(
-                    errmsg,
+                    errmsg + ': {exc_info}',
                     exc_info=e,
-                    extra={'spider': spider}
                 )
 
         await close_handler(self.downloader.close, errmsg='Downloader close failure')
 
-        # await close_handler(self.scraper.close_spider, spider, errmsg='Scraper close failure')
+        await close_handler(slot.scheduler.close, errmsg='Scheduler close failure')
 
-        # await close_handler(self.slot.scheduler.close, reason, errmsg='Scheduler close failure')
         await close_handler(self.signals.send_catch_log_deferred, signal=signals.spider_closed, spider=spider,
                             reason=reason, errmsg='Error while sending spider_close signal')
-        # await close_handler(self.crawler.stats.close_spider, spider, reason=reason, errmsg='Stats close failure')
 
         logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
 
