@@ -1,4 +1,3 @@
-from aioscpy.utils.misc import load_object, create_instance
 
 
 class Scheduler(object):
@@ -24,6 +23,9 @@ class Scheduler(object):
         self.queue = self.queue_df()
         async for request in start_requests:
             await self.enqueue_request(request)
+
+    async def close(self):
+        await self.queue.close()
 
     def __len__(self):
         return self.queue.qsize()
