@@ -31,6 +31,7 @@ class AioHttpDownloadHandler:
             'cookies': dict(request.cookies),
             'data': request.body or None
         }
+        self.aiohttp_client_session_args['timeout'] = aiohttp.ClientTimeout(total=20)
 
         headers = request.headers or self.settings.get('DEFAULT_REQUEST_HEADERS')
         if isinstance(headers, Headers):

@@ -10,7 +10,7 @@ SCHEDULER_PRIORITY_QUEUE = "aioscpy.queue.memory.memory_queue"
 DOWNLOADER = 'aioscpy.core.downloader.Downloader'
 ITEM_PROCESSOR = 'aioscpy.middleware.ItemPipelineManager'
 DOWNLOAD_DELAY = 0
-DOWNLOAD_TIMEOUT = 30
+DOWNLOAD_TIMEOUT = 20
 
 # LOG CONFIG
 LOG_FORMATTER = 'aioscpy.logformatter.LogFormatter'
