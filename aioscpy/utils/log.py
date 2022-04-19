@@ -10,22 +10,20 @@ from loguru import logger
 from aioscpy.exceptions import ScrapyDeprecationWarning
 from aioscpy.settings import Settings
 
-settings = Settings()
 
-
-def set_log_config(formatter: str):
+def set_log_config(formatter: str, settings):
     _log_config = {
         "default": {
             "handlers": [
                 {
                     "sink": sys.stdout,
                     "format": formatter,
-                    "level": "TRACE"
+                    "level": settings.get('LOG_LEVEL', "TRACE")
                 }
             ],
             "extra": {
                 "host": socket.gethostbyname(socket.gethostname()),
-                'log_name': 'default',
+                'log_name': settings.get("BOT_NAME", 'default'),
                 'type': 'None'
             },
             "levels": [
@@ -37,17 +35,16 @@ def set_log_config(formatter: str):
                 dict(name="ERROR", icon="❌️", color="<red><bold>"),
                 dict(name="CRITICAL", icon="☠️", color="<RED><bold>"),
             ]
-        },
-        'kafka': True
+        }
     }
     if settings.get('LOG_FILE', False):
         _log_config['default']['handlers'].append({
-            "sink": f"{settings.get('LOG_FILENAME', __file__)}.log",
+            "sink": settings.get('LOG_FILENAME', __file__),
             "format": formatter,
-            "level": "INFO",
-            "rotation": '1 week',
-            "retention": '30 days',
-            'encoding': 'utf-8'
+            "level": settings.get('LOG_LEVEL', "DEBUG"),
+            "rotation": settings.get("LOG_ROTATION", '1 week'),
+            "retention": settings.get("LOG_RETENTION", '30 days'),
+            'encoding': settings.get("LOG_ENCODING", "utf-8")
         })
     return _log_config
 
@@ -83,7 +80,8 @@ class LogFormatter(object):
 
     @classmethod
     def get_logger(cls, log, name=None):
-        log_config = set_log_config(cls.simple_formatter)
+        settings = Settings()
+        log_config = set_log_config(cls.simple_formatter, settings)
         config = log_config.pop('default', {})
         if name:
             config['extra']['log_name'] = name
@@ -119,8 +117,8 @@ def logformatter_adapter(logkws):
 
 
 def std_log_aioscpy_info(settings):
-    logger.info("aioscpy %(version)s started (bot: %(bot)s)",
-                {'version': aioscpy.__version__, 'bot': settings['BOT_NAME']})
+    logger.info("aioscpy {version} started (bot: {bot})",
+                **{'version': aioscpy.__version__, 'bot': settings['BOT_NAME']})
 
 
 lof = LogFormatter

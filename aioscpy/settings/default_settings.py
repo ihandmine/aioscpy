@@ -12,18 +12,15 @@ ITEM_PROCESSOR = 'aioscpy.middleware.ItemPipelineManager'
 DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 30
 
-# LOG
-LOG_ENABLED = True
-# LOG_ENCODING = 'utf-8'
+# LOG CONFIG
 LOG_FORMATTER = 'aioscpy.logformatter.LogFormatter'
-LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
-# LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
-# LOG_STDOUT = False
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = True
-LOG_FILENAME = "info.log"
-# LOG_FILE_APPEND = True
-# LOG_SHORT_NAMES = False
+LOG_FILENAME = f"{BOT_NAME}.log"
+LOG_ENCODING = 'utf-8'
+LOG_ROTATION = '1 week'
+LOG_RETENTION = '30 days'
+
 
 # message config
 RABBITMQ_TCP = {

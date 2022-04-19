@@ -2,7 +2,7 @@ import pprint
 import asyncio
 import signal
 
-from aioscpy.utils.log import logger
+from aioscpy.utils.log import logger, std_log_aioscpy_info
 from aioscpy.settings import overridden_settings
 from aioscpy.utils.tools import async_generator_wrapper, install_event_loop_tips, task_await
 from aioscpy.core.engine import ExecutionEngine
@@ -84,6 +84,7 @@ class CrawlerProcess:
         self.bootstrap_failed = False
         self._group = []
         install_shutdown_handlers(self._signal_shutdown)
+        std_log_aioscpy_info(settings)
 
     def crawl(self, crawler_or_spidercls, *args, **kwargs):
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
