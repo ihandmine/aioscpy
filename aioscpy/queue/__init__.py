@@ -42,3 +42,7 @@ class BaseQueue(object):
 
     async def clear(self):
         await self.server.delete(self.key)
+
+    async def close(self):
+        if hasattr(self.server, "close"):
+            await self.server.close()
