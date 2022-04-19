@@ -130,6 +130,9 @@ class CrawlerProcess:
             task.cancel()
         for group in self._group:
             group.cancel()
+        current_task = asyncio.all_tasks()
+        for ct in current_task:
+            ct.cancel()
         await asyncio.sleep(1)
         asyncio.get_running_loop().stop()
 
@@ -149,4 +152,7 @@ class CrawlerProcess:
 
     def start(self):
         install_event_loop_tips()
-        asyncio.run(self.run())
+        try:
+            asyncio.run(self.run())
+        except asyncio.CancelledError:
+            pass
