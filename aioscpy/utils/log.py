@@ -124,5 +124,3 @@ def std_log_aioscpy_info(settings):
 lof = LogFormatter
 
 logger = lof.get_logger(logger)
-
-

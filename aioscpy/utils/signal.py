@@ -1,12 +1,10 @@
 """Helper functions for working with signals"""
 import asyncio
-import logging
 
 from pydispatch.dispatcher import Anonymous, Any, disconnect, getAllReceivers, liveReceivers
 from pydispatch.robustapply import robustApply
 from aioscpy.exceptions import StopDownload
-
-logger = logging.getLogger(__name__)
+from aioscpy.utils.log import logger
 
 
 class _IgnoredException(Exception):
@@ -22,8 +20,8 @@ async def robustApplyWrap(f, recv, *args, **kw):
             return await result
     except (Exception, BaseException) as exc:  # noqa: E722
         if dont_log is None or not isinstance(exc, dont_log):
-            logger.error("Error caught on signal handler: %(receiver)s",
-                         {'receiver': recv},
+            logger.error("Error caught on signal handler: {receiver}",
+                         **{'receiver': recv},
                          exc_info=exc,
                          extra={'spider': spider})
         return exc

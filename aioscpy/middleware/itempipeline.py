@@ -1,11 +1,5 @@
-import logging
-
-from scrapy.utils.conf import build_component_list
-
-from .middleware import MiddlewareManager
-
-
-logger = logging.getLogger(__name__)
+from aioscpy.middleware.middleware import MiddlewareManager
+from aioscpy.utils.common import build_component_list
 
 
 class ItemPipelineManager(MiddlewareManager):
