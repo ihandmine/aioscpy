@@ -27,9 +27,6 @@ class Slot:
     def set(self, sets: str, obj: object):
         self._objects_slot.__setitem__(sets, obj)
 
-    def remove(self, sets: str):
-        self._objects_slot.pop(sets)
-
     def clear(self):
         del self._objects_slot
         self._modules_slot = []
@@ -59,7 +56,7 @@ class DependencyInjection(object):
     def load(self, key):
         return self.slot.get(key)
 
-    def load_object_slot(self, key: str, path: str):
+    def load_object_slot(self, key: str, path: str, cls=None):
         try:
             dot = path.rindex('.')
         except ValueError:
@@ -73,7 +70,10 @@ class DependencyInjection(object):
         except AttributeError:
             raise NameError("Module '%s' doesn't define any object named '%s'" % (module, name))
 
-        self.slot.set(key, self.create_instance(obj, self.settings, self.crawler))
+        if cls is None:
+            obj = self.create_instance(obj, self.settings, self.crawler)
+        self.slot.set(key, obj)
+        return obj
 
     def walk_modules(self, path: str):
         mods = self.slot._modules_slot
@@ -101,11 +101,13 @@ class DependencyInjection(object):
         else:
             return objcls(*args, **kwargs)
 
-    async def runner(self):
-        if not self.settings.get('DI_CONFIG'):
-            raise KeyError('Settings DI config must not be None')
+    async def inject_runner(self):
+        if any([not self.settings.get('DI_CONFIG'), not self.settings.get('DI_CONFIG_CLS')]):
+            raise KeyError('Settings DI_CONFIG/DI_CONFIG_CLS not be None')
         for key, value in self.settings['DI_CONFIG'].items():
             self.load_object_slot(key, value)
+        for key, value in self.settings['DI_CONFIG_CLS'].items():
+            self.load_object_slot(key, value, cls=True)
         self.slot.live_beat = asyncio.create_task(self.live_beat())
 
     async def live_beat(self):
