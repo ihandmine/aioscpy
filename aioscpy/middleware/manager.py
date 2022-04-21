@@ -4,7 +4,6 @@ from asyncio import iscoroutinefunction
 from collections import defaultdict, deque
 
 from aioscpy.exceptions import NotConfigured
-from aioscpy.utils.log import logger
 
 
 class MiddlewareManager:
@@ -15,6 +14,7 @@ class MiddlewareManager:
     def __init__(self, crawler=None, *middlewares):
         self.crawler = crawler
         self.middlewares = middlewares
+        self.logger = crawler.load("logger")
         self.methods = defaultdict(deque)
         for mw in middlewares:
             self._add_middleware(mw)
@@ -36,11 +36,11 @@ class MiddlewareManager:
             except NotConfigured as e:
                 if e.args:
                     clsname = clspath.split('.')[-1]
-                    logger.warning("Disabled %(clsname)s: %(eargs)s",
+                    crawler.load("logger").warning("Disabled %(clsname)s: %(eargs)s",
                                    {'clsname': clsname, 'eargs': e.args[0]},
                                    extra={'crawler': crawler})
         if enabled:
-            logger.info("Enabled %(name)s %(componentname)ss:\n%(enabledlist)s",
+            crawler.load("logger").info("Enabled %(name)s %(componentname)ss:\n%(enabledlist)s",
                         {'componentname': cls.component_name,
                          'enabledlist': pprint.pformat(enabled),
                          'name': crawler.spider.name},

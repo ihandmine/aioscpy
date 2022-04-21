@@ -5,7 +5,6 @@ from time import time
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.utils.tools import call_helper, task_await
-from aioscpy.utils.log import logger, logformatter_adapter
 
 
 class Slot:
@@ -55,6 +54,7 @@ class ExecutionEngine(object):
         self.scheduler = crawler.load("scheduler")
         self.itemproc = crawler.load("item_processor")
         self.downloader = crawler.load("downloader")
+        self.logger = crawler.load("logger")
         self._spider_closed_callback = spider_closed_callback
 
     async def start(self, spider, start_requests=None):
@@ -103,7 +103,7 @@ class ExecutionEngine(object):
                 slot.start_requests = None
             except Exception:
                 slot.start_requests = None
-                logger.error('Error while obtaining start requests',
+                self.logger.error('Error while obtaining start requests',
                              exc_info=True, extra={'spider': spider})
             else:
                 await self.crawl(request, spider)
@@ -129,9 +129,9 @@ class ExecutionEngine(object):
             if isinstance(result, self.crawler.load('response')):
                 result.request = request
                 logkws = self.logformatter.crawled(request, result, spider)
-                level, message, kwargs = logformatter_adapter(logkws)
+                level, message, kwargs = self.crawler.load("logformatter_adapter")(logkws)
                 if logkws is not None:
-                    logger.log(level, message, **kwargs)
+                    self.logger.log(level, message, **kwargs)
                 await self.signals.send_catch_log(signals.response_received,
                                                   response=result, request=request, spider=spider)
         finally:
@@ -211,7 +211,7 @@ class ExecutionEngine(object):
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
         if not self.has_capacity():
             raise RuntimeError("No free spider slot when opening %r" % spider.name)
-        logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
+        self.logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
         # scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
         self.slot = Slot(start_requests, close_if_idle, self.scheduler)
@@ -233,7 +233,7 @@ class ExecutionEngine(object):
         if slot and slot.closing:
             return slot.closing
 
-        logger.info("Closing spider({name}) ({reason})",
+        self.logger.info("Closing spider({name}) ({reason})",
                     **{'reason': reason, 'name': spider.name},
                     extra={'spider': spider})
 
@@ -246,7 +246,7 @@ class ExecutionEngine(object):
                 else:
                     callback(*args, **kwargs)
             except (Exception, BaseException) as e:
-                logger.error(
+                self.logger.error(
                     errmsg + ': {exc_info}',
                     exc_info=e,
                 )
@@ -258,7 +258,7 @@ class ExecutionEngine(object):
         await close_handler(self.signals.send_catch_log_deferred, signal=signals.spider_closed, spider=spider,
                             reason=reason, errmsg='Error while sending spider_close signal')
 
-        logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
+        self.logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
 
         await close_handler(setattr, self, 'slot', None, errmsg='Error while unassigning slot')
 

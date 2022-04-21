@@ -2,7 +2,6 @@ import asyncio
 import ssl
 import aiohttp
 
-from aioscpy.utils.log import logger
 from anti_header import Headers
 
 
@@ -51,7 +50,7 @@ class AioHttpDownloadHandler:
         proxy = request.meta.get("proxy")
         if proxy:
             kwargs["proxy"] = proxy
-            logger.debug(f"use {proxy} crawling: {request.url}")
+            self.crawler.load("logger").debug(f"use {proxy} crawling: {request.url}")
 
         async with aiohttp.ClientSession(**self.aiohttp_client_session_args) as session:
             async with session.request(request.method, request.url, **kwargs) as response:

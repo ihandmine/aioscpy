@@ -26,7 +26,9 @@ DI_CONFIG = {
 DI_CONFIG_CLS = {
     "request": "aioscpy.http.Request",
     "response": "aioscpy.http.TextResponse",
-    "form_request": "aioscpy.http.FormRequest"
+    "form_request": "aioscpy.http.FormRequest",
+    "logger": "aioscpy.utils.log.logger",
+    "logformatter_adapter": "aioscpy.utils.log.logformatter_adapter",
 }
 
 # message config
