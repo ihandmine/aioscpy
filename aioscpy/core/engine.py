@@ -6,7 +6,6 @@ from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
 from aioscpy.http import Response
 from aioscpy.http import Request
-from aioscpy.utils.misc import load_object
 from aioscpy.utils.tools import call_helper, task_await
 from aioscpy.utils.log import logger, logformatter_adapter
 
@@ -54,13 +53,10 @@ class ExecutionEngine(object):
         self.scheduler = None
         self.running = False
         self.signals = crawler.signals
-        self.logformatter = crawler.logformatter
-        self.scheduler_cls = load_object(self.settings['SCHEDULER'])
-        downloader_cls = load_object(self.settings['DOWNLOADER'])
-        itemproc_cls = load_object(self.settings['ITEM_PROCESSOR'])
-        self.itemproc = itemproc_cls.from_crawler(crawler)
-        self.downloader = downloader_cls(crawler)
-        # self.scraper = Scraper(crawler)
+        self.logformatter = crawler.load("log_formatter")
+        self.scheduler = crawler.load("scheduler")
+        self.itemproc = crawler.load("item_processor")
+        self.downloader = crawler.load("downloader")
         self._spider_closed_callback = spider_closed_callback
 
     async def start(self, spider, start_requests=None):
@@ -219,10 +215,10 @@ class ExecutionEngine(object):
             raise RuntimeError("No free spider slot when opening %r" % spider.name)
         logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
-        scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
-        self.slot = Slot(start_requests, close_if_idle, scheduler)
+        # scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
+        self.slot = Slot(start_requests, close_if_idle, self.scheduler)
         self.spider = spider
-        await call_helper(scheduler.open, start_requests)
+        await call_helper(self.scheduler.open, start_requests)
         # await call_helper(self.scraper.open_spider, spider)
         # await call_helper(self.crawler.stats.open_spider, spider)
         await self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)

@@ -3,8 +3,7 @@
 class Scheduler(object):
 
     def __init__(self, _queue_df):
-        self.queue_df = _queue_df
-        self.queue = None
+        self.queue = _queue_df
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -20,7 +19,6 @@ class Scheduler(object):
         return request
 
     async def open(self, start_requests):
-        self.queue = self.queue_df()
         async for request in start_requests:
             await self.enqueue_request(request)
 

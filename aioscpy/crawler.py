@@ -9,7 +9,7 @@ from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
 from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
-from aioscpy.utils.misc import load_object
+from aioscpy.inject import DependencyInjection
 
 
 class Crawler:
@@ -30,13 +30,11 @@ class Crawler:
             logger.info("Overridden settings {spider}:\n{settings}",
                         **{'settings': pprint.pformat(d), "spider": spidercls.__name__})
 
-        lf_cls = load_object(self.settings['LOG_FORMATTER'])
-        self.logformatter = lf_cls.from_crawler(self)
-
         self.settings.freeze()
         self.crawling = False
         self.spider = self._create_spider(*args, **kwargs)
         self.engine = None
+        self.DI = self._create_dependency()
         self._close_wait = None
 
     async def crawl(self):
@@ -45,6 +43,7 @@ class Crawler:
         self.crawling = True
 
         try:
+            await self.DI.runner()
             self.engine = self._create_engine()
             start_requests = await async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
@@ -56,11 +55,17 @@ class Crawler:
                 await self.engine.close()
             raise e
 
+    def load(self, key):
+        return self.DI.load(key)
+
     def _create_spider(self, *args, **kwargs):
         return self.spidercls.from_crawler(self, *args, **kwargs)
 
     def _create_engine(self):
         return ExecutionEngine(self, self.stop)
+
+    def _create_dependency(self):
+        return DependencyInjection(self.settings, self)
 
     async def stop(self):
         if self.crawling:
