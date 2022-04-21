@@ -5,7 +5,6 @@ from collections import defaultdict, deque
 
 from aioscpy.exceptions import NotConfigured
 from aioscpy.utils.log import logger
-from aioscpy.utils.misc import create_instance, load_object
 
 
 class MiddlewareManager:
@@ -13,7 +12,8 @@ class MiddlewareManager:
 
     component_name = 'foo middleware'
 
-    def __init__(self, *middlewares):
+    def __init__(self, crawler=None, *middlewares):
+        self.crawler = crawler
         self.middlewares = middlewares
         self.methods = defaultdict(deque)
         for mw in middlewares:
@@ -30,8 +30,7 @@ class MiddlewareManager:
         enabled = []
         for clspath in mwlist:
             try:
-                mwcls = load_object(clspath)
-                mw = create_instance(mwcls, settings, crawler)
+                mw = crawler.DI.load_object_slot(clspath.split('.')[:-1].lower(), clspath)
                 middlewares.append(mw)
                 enabled.append(clspath)
             except NotConfigured as e:
@@ -46,7 +45,7 @@ class MiddlewareManager:
                          'enabledlist': pprint.pformat(enabled),
                          'name': crawler.spider.name},
                         extra={'crawler': crawler})
-        return cls(*middlewares)
+        return cls(crawler=crawler, *middlewares)
 
     @classmethod
     def from_crawler(cls, crawler):

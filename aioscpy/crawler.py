@@ -22,11 +22,9 @@ class Crawler:
         self.spidercls = spidercls
         self.settings = settings.copy()
         self.spidercls.update_settings(self.settings)
-
         self.signals = SignalManager(self)
 
-        d = dict(overridden_settings(self.settings))
-        if d:
+        if d := dict(overridden_settings(self.settings)):
             logger.info("Overridden settings {spider}:\n{settings}",
                         **{'settings': pprint.pformat(d), "spider": spidercls.__name__})
 
@@ -43,7 +41,7 @@ class Crawler:
         self.crawling = True
 
         try:
-            await self.DI.runner()
+            await self.DI.inject_runner()
             self.engine = self._create_engine()
             start_requests = await async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)

@@ -3,21 +3,25 @@ import ssl
 import aiohttp
 
 from aioscpy.utils.log import logger
-from aioscpy.http import TextResponse
 from anti_header import Headers
 
 
 class AioHttpDownloadHandler:
     session = None
 
-    def __init__(self, settings):
+    def __init__(self, settings, crawler):
         self.settings = settings
+        self.crawler = crawler
         self.aiohttp_client_session_args = settings.get('AIOHTTP_CLIENT_SESSION_ARGS', {})
         self.verify_ssl = self.settings.get("VERIFY_SSL")
 
     @classmethod
-    def from_settings(cls, settings):
-        return cls(settings)
+    def from_settings(cls, settings, crawler):
+        return cls(settings, crawler)
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls.from_settings(crawler.settings, crawler)
 
     def get_session(self, *args, **kwargs):
         if self.session is None:
@@ -53,12 +57,13 @@ class AioHttpDownloadHandler:
             async with session.request(request.method, request.url, **kwargs) as response:
                 content = await response.read()
 
-        return TextResponse(str(response.url),
-                            status=response.status,
-                            headers=response.headers,
-                            body=content,
-                            cookies=response.cookies,
-                            _response=response)
+        return self.crawler.load("response")(
+                str(response.url),
+                status=response.status,
+                headers=response.headers,
+                body=content,
+                cookies=response.cookies,
+                _response=response)
 
     async def close(self):
         if self.session is not None:

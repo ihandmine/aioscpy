@@ -4,8 +4,6 @@ from time import time
 
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
-from aioscpy.http import Response
-from aioscpy.http import Request
 from aioscpy.utils.tools import call_helper, task_await
 from aioscpy.utils.log import logger, logformatter_adapter
 
@@ -125,10 +123,10 @@ class ExecutionEngine(object):
 
     async def _handle_downloader_output(self, result, request, spider):
         try:
-            if isinstance(result, Request):
+            if isinstance(result, self.crawler.load('request')):
                 await self.crawl(result, spider)
                 return
-            if isinstance(result, Response):
+            if isinstance(result, self.crawler.load('response')):
                 result.request = request
                 logkws = self.logformatter.crawled(request, result, spider)
                 level, message, kwargs = logformatter_adapter(logkws)
@@ -143,7 +141,7 @@ class ExecutionEngine(object):
         await call_helper(self.handle_spider_output, response, request, response, spider)
 
     async def call_spider(self, result, request, spider):
-        if isinstance(result, Response):
+        if isinstance(result, self.crawler.load('response')):
             callback = request.callback or spider._parse
             result.request = request
             return await call_helper(callback, result, **result.request.cb_kwargs)

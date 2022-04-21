@@ -1,7 +1,6 @@
 from asyncio import iscoroutinefunction
 
 from aioscpy.exceptions import _InvalidOutput
-from aioscpy.http import Request, Response
 from aioscpy.utils.common import build_component_list
 from aioscpy.middleware.manager import MiddlewareManager
 
@@ -28,7 +27,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, spider=spider)
             else:
                 response = method(request=request, spider=spider)
-            if response is not None and not isinstance(response, (Response, Request)):
+            if response is not None and not isinstance(response, (self.crawler.load('response'), self.crawler.load('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_request must return None, Response or Request, got %s"
                     % (method.__self__.__class__.__name__, response.__class__.__name__)
@@ -39,7 +38,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
     async def process_response(self, spider, request, response):
         if response is None:
             raise TypeError("Received None in process_response")
-        elif isinstance(response, Request):
+        elif isinstance(response, self.crawler.load('request')):
             return response
 
         for method in self.methods['process_response']:
@@ -47,12 +46,12 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, response=response, spider=spider)
             else:
                 response = method(request=request, response=response, spider=spider)
-            if not isinstance(response, (Response, Request)):
+            if not isinstance(response, (self.crawler.load('response'), self.crawler.load('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_response must return Response or Request, got %s"
                     % (method.__self__.__class__.__name__, type(response))
                 )
-            if isinstance(response, Request):
+            if isinstance(response, self.crawler.load('request')):
                 return response
         return response
 
@@ -62,7 +61,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, exception=exception, spider=spider)
             else:
                 response = method(request=request, exception=exception, spider=spider)
-            if response is not None and not isinstance(response, (Response, Request)):
+            if response is not None and not isinstance(response, (self.crawler.load('response'), self.crawler.load('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_exception must return None, Response or Request, got %s"
                     % (method.__self__.__class__.__name__, type(response))
