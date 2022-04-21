@@ -84,6 +84,10 @@ class Downloader:
 
         crawler.signals.connect(self.close, signals.engine_stopped)
 
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler)
+
     async def fetch(self, request, spider, _handle_downloader_output):
         self.active.add(request)
         key, slot = self._get_slot(request, spider)
