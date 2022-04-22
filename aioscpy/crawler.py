@@ -116,6 +116,14 @@ class CrawlerProcess:
 
         task.add_done_callback(_done)
 
+    def load_spider(self, path=None):
+        if path is None:
+            raise KeyError("Not found spider path dir.")
+        spiders_cls = DependencyInjection.load_all_spider(path)
+        for name, spider_cls in spiders_cls.items():
+            self.crawl(spider_cls)
+            logger.debug("Loading spider({name}) from {path}", **{"name": name, "path": path})
+
     async def stop(self):
         return await asyncio.gather(*[c.stop() for c in list(self.crawlers)])
 
