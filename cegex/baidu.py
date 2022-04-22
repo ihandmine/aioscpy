@@ -26,3 +26,8 @@ class BaiduSpider(Spider):
     async def process_item(self, item):
         pass
         # self.logger.info("%(item)s", {'item': pformat(item)})
+
+
+if __name__ == '__main__':
+    baidu = BaiduSpider()
+    baidu.start()

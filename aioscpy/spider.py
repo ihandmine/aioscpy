@@ -51,6 +51,13 @@ class Spider(object):
         if callable(closed):
             return closed(reason)
 
+    @classmethod
+    def start(cls):
+        from aioscpy.crawler import CrawlerProcess
+        process = CrawlerProcess()
+        process.crawl(cls)
+        process.start()
+
     def __str__(self):
         return "<%s %r at 0x%0x>" % (type(self).__name__, self.name, id(self))
 
