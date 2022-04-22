@@ -6,6 +6,7 @@ import parsel
 from w3lib.encoding import (html_body_declared_encoding, html_to_unicode,
                             http_content_type_encoding, resolve_encoding)
 from w3lib.html import strip_html5_whitespace
+from parsel import Selector
 
 from aioscpy.http import Request
 from aioscpy.http.response import Response
@@ -110,9 +111,9 @@ class TextResponse(Response):
 
     @property
     def selector(self):
-        from scrapy.selector import Selector
         if self._cached_selector is None:
-            self._cached_selector = Selector(self)
+            text = self.text
+            self._cached_selector = Selector(text)
         return self._cached_selector
 
     def xpath(self, query, **kwargs):
