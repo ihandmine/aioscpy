@@ -10,7 +10,7 @@ DOWNLOAD_TIMEOUT = 20
 
 # LOG CONFIG
 LOG_LEVEL = "DEBUG"
-LOG_FILE = True
+LOG_FILE = False
 LOG_FILENAME = f"{BOT_NAME}.log"
 LOG_ENCODING = "utf-8"
 LOG_ROTATION = "1 week"
@@ -29,6 +29,8 @@ DI_CONFIG_CLS = {
     "form_request": "aioscpy.http.FormRequest",
     "logger": "aioscpy.utils.log.logger",
     "logformatter_adapter": "aioscpy.utils.log.logformatter_adapter",
+    "exceptions": "aioscpy.exceptions",
+    "tools": "aioscpy.utils.tools"
 }
 
 # message config

@@ -4,12 +4,11 @@ from time import time
 
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
-from aioscpy.utils.tools import call_helper, task_await
 
 
 class Slot:
 
-    def __init__(self, start_requests, close_if_idle, scheduler):
+    def __init__(self, start_requests, close_if_idle, scheduler, crawler):
         self.closing = None
         self.inprogress = set()  # requests in progress
 
@@ -17,6 +16,7 @@ class Slot:
         self.doing_start_requests = False
         self.close_if_idle = close_if_idle
         self.scheduler = scheduler
+        self.crawler = crawler
         self.heartbeat = None
         self.closing_wait = None
 
@@ -29,7 +29,7 @@ class Slot:
 
     async def close(self):
         self._maybe_fire_closing()
-        await task_await(self, "closing_wait")
+        await self.crawler.load("tools").task_await(self, "closing_wait")
 
     def _maybe_fire_closing(self):
         if not self.inprogress:
@@ -55,6 +55,7 @@ class ExecutionEngine(object):
         self.itemproc = crawler.load("item_processor")
         self.downloader = crawler.load("downloader")
         self.logger = crawler.load("logger")
+        self.call_helper = crawler.load("tools").call_helper
         self._spider_closed_callback = spider_closed_callback
 
     async def start(self, spider, start_requests=None):
@@ -87,9 +88,9 @@ class ExecutionEngine(object):
         while self.lock and not self._needs_backout(spider) and self.lock:
             self.lock = False
             try:
-                if not await call_helper(slot.scheduler.has_pending_requests):
+                if not await self.call_helper(slot.scheduler.has_pending_requests):
                     break
-                request = await call_helper(slot.scheduler.next_request)
+                request = await self.call_helper(slot.scheduler.next_request)
                 slot.add_request(request)
                 await self.downloader.fetch(request, spider, self._handle_downloader_output)
             finally:
@@ -138,18 +139,18 @@ class ExecutionEngine(object):
             self.slot.remove_request(request)
             asyncio.create_task(self._next_request(self.spider))
         response = await self.call_spider(result, request, spider)
-        await call_helper(self.handle_spider_output, response, request, response, spider)
+        await self.call_helper(self.handle_spider_output, response, request, response, spider)
 
     async def call_spider(self, result, request, spider):
         if isinstance(result, self.crawler.load('response')):
             callback = request.callback or spider._parse
             result.request = request
-            return await call_helper(callback, result, **result.request.cb_kwargs)
+            return await self.call_helper(callback, result, **result.request.cb_kwargs)
         else:
             if request.errback is None:
                 raise result
             # 下载中间件或下载结果出现错误,回调request中的errback函数
-            return await call_helper(request.errback, result)
+            return await self.call_helper(request.errback, result)
 
     async def handle_spider_output(self, result, request, response, spider):
         if not result:
@@ -166,7 +167,7 @@ class ExecutionEngine(object):
                 item = await self.itemproc.process_item(res, spider)
                 process_item_method = getattr(spider, 'process_item', None)
                 if process_item_method:
-                    await call_helper(process_item_method, item)
+                    await self.call_helper(process_item_method, item)
 
     async def spider_is_idle(self, spider):
         # if not self.scraper.slot.is_idle():
@@ -185,7 +186,7 @@ class ExecutionEngine(object):
             # not all start requests are handled
             return False
 
-        if await call_helper(self.slot.scheduler.has_pending_requests):
+        if await self.call_helper(self.slot.scheduler.has_pending_requests):
             # scheduler has pending requests
             return False
 
@@ -200,12 +201,12 @@ class ExecutionEngine(object):
         return not bool(self.slot)
 
     async def crawl(self, request, spider):  # 将网址 请求加入队列
-        # await call_helper(self.slot.scheduler.enqueue_request, request)
+        # await self.call_helper(self.slot.scheduler.enqueue_request, request)
         if spider not in self.open_spiders:
             raise RuntimeError("Spider %r not opened when crawling: %s" % (spider.name, request))
 
         await self.signals.send_catch_log(signals.request_scheduled, request=request, spider=spider)
-        if not await call_helper(self.slot.scheduler.enqueue_request, request):
+        if not await self.call_helper(self.slot.scheduler.enqueue_request, request):
             await self.signals.send_catch_log(signals.request_dropped, request=request, spider=spider)
 
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
@@ -213,12 +214,12 @@ class ExecutionEngine(object):
             raise RuntimeError("No free spider slot when opening %r" % spider.name)
         self.logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
-        # scheduler = await call_helper(self.scheduler_cls.from_crawler, self.crawler)
-        self.slot = Slot(start_requests, close_if_idle, self.scheduler)
+        # scheduler = await self.call_helper(self.scheduler_cls.from_crawler, self.crawler)
+        self.slot = Slot(start_requests, close_if_idle, self.scheduler, self.crawler)
         self.spider = spider
-        await call_helper(self.scheduler.open, start_requests)
-        # await call_helper(self.scraper.open_spider, spider)
-        # await call_helper(self.crawler.stats.open_spider, spider)
+        await self.call_helper(self.scheduler.open, start_requests)
+        # await self.call_helper(self.scraper.open_spider, spider)
+        # await self.call_helper(self.crawler.stats.open_spider, spider)
         await self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)
         await self._next_request(spider)
         self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))

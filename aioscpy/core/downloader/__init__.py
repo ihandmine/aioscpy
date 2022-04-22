@@ -6,7 +6,6 @@ from datetime import datetime
 from collections import deque
 
 from aioscpy.utils.othtypes import dnscache, urlparse_cached
-from aioscpy.utils.tools import call_helper, call_create_task
 from aioscpy import signals
 from aioscpy.middleware import DownloaderMiddlewareManager
 from aioscpy.core.downloader.http import AioHttpDownloadHandler
@@ -72,6 +71,8 @@ class Downloader:
         self.crawler = crawler
         self.slots = {}
         self.active = set()
+        self.call_helper = crawler.load("tools").call_helper
+        self.call_create_task = crawler.load("tools").call_create_task
         self.handlers = AioHttpDownloadHandler(self.settings, crawler)
         self.total_concurrency = self.settings.getint('CONCURRENT_REQUESTS')
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
@@ -94,7 +95,7 @@ class Downloader:
 
         slot.active.add(request)
         slot.queue.append((request, _handle_downloader_output))
-        await call_create_task(self._process_queue, spider, slot)
+        await self.call_create_task(self._process_queue, spider, slot)
 
     async def _process_queue(self, spider, slot):
         if slot.delay_run:
@@ -109,17 +110,17 @@ class Downloader:
                 slot.delay_run = True
                 await asyncio.sleep(penalty)
                 slot.delay_run = False
-                await call_create_task(self._process_queue, spider, slot)
+                await self.call_create_task(self._process_queue, spider, slot)
                 return
 
         # Process enqueued requests if there are free slots to transfer for this slot
         while slot.queue and slot.free_transfer_slots() > 0:
             slot.lastseen = now
             request, _handle_downloader_output = slot.queue.popleft()
-            await call_create_task(self._download, slot, request, spider, _handle_downloader_output)
+            await self.call_create_task(self._download, slot, request, spider, _handle_downloader_output)
             # prevent burst if inter-request delays were configured
             if delay:
-                await call_create_task(self._process_queue, spider, slot)
+                await self.call_create_task(self._process_queue, spider, slot)
                 break
 
     async def _download(self, slot, request, spider, _handle_downloader_output):
@@ -128,7 +129,7 @@ class Downloader:
         response = await self.middleware.process_request(spider, request)
         process_request_method = getattr(spider, "process_request", None)
         if process_request_method:
-            await call_helper(process_request_method, request)
+            await self.call_helper(process_request_method, request)
         try:
             if response is None or isinstance(response, self.crawler.load('response')):
                 request = response or request
@@ -137,23 +138,23 @@ class Downloader:
             response = await self.middleware.process_exception(spider, request, exc)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
-                await call_helper(process_exception_method, request, exc)
+                await self.call_helper(process_exception_method, request, exc)
         else:
             try:
                 response = await self.middleware.process_response(spider, request, response)
                 process_response_method = getattr(spider, "process_response", None)
                 if process_response_method:
-                    await call_helper(process_response_method, request, response)
+                    await self.call_helper(process_response_method, request, response)
             except (Exception, BaseException) as exc:
                 response = exc
         finally:
             slot.transferring.remove(request)
             slot.active.remove(request)
             self.active.remove(request)
-            await call_create_task(self._process_queue, spider, slot)
+            await self.call_create_task(self._process_queue, spider, slot)
             if isinstance(response, self.crawler.load('response')):
                 response.request = request
-            await call_create_task(_handle_downloader_output, response, request, spider)
+            await self.call_create_task(_handle_downloader_output, response, request, spider)
 
     async def close(self):
         try:
