@@ -1,8 +1,5 @@
 from w3lib.url import safe_url_string
 
-from aioscpy.utils.tools import obsolete_setter
-from aioscpy.utils.tools import to_bytes
-
 
 class Request(object):
 
@@ -67,7 +64,7 @@ class Request(object):
         if ('://' not in self._url) and (not self._url.startswith('data:')):
             raise ValueError('Missing scheme in request url: %s' % self._url)
 
-    url = property(_get_url, obsolete_setter(_set_url, 'url'))
+    url = property(_get_url, _set_url)
 
     def _get_body(self):
         return self._body
@@ -76,9 +73,9 @@ class Request(object):
         if body is None:
             self._body = b''
         else:
-            self._body = to_bytes(body, self.encoding)
+            self._body = self.ref.get("tools").to_bytes(body, self.encoding)
 
-    body = property(_get_body, obsolete_setter(_set_body, 'body'))
+    body = property(_get_body, _set_body)
 
     @property
     def encoding(self):
