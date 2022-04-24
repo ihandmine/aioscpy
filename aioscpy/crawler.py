@@ -2,17 +2,16 @@ import pprint
 import asyncio
 import signal
 
-from aioscpy.utils.log import logger, std_log_aioscpy_info
 from aioscpy.settings import overridden_settings
-from aioscpy.utils.tools import async_generator_wrapper, install_event_loop_tips, task_await
 from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
 from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
 from aioscpy.inject import DependencyInjection
+from aioscpy import object_ref
 
 
-class Crawler:
+class Crawler(object, metaclass=object_ref):
 
     def __init__(self, spidercls, *args, settings=None, **kwargs):
 
@@ -25,7 +24,7 @@ class Crawler:
         self.signals = SignalManager(self)
 
         if d := dict(overridden_settings(self.settings)):
-            logger.info("Overridden settings {spider}:\n{settings}",
+            self.logger.info("Overridden settings {spider}:\n{settings}",
                         **{'settings': pprint.pformat(d), "spider": spidercls.__name__})
 
         self.settings.freeze()
@@ -43,11 +42,11 @@ class Crawler:
         try:
             await self.DI.inject_runner()
             self.engine = self._create_engine()
-            start_requests = await async_generator_wrapper(self.spider.start_requests())
+            start_requests = await self.ref.get("tools").async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
-            await task_await(self, "_close_wait")
+            await self.ref.get("tools").task_await(self, "_close_wait")
         except Exception as e:
-            logger.exception(e)
+            self.logger.exception(e)
             self.crawling = False
             if self.engine is not None:
                 await self.engine.close()
@@ -72,7 +71,7 @@ class Crawler:
         self._close_wait = True
 
 
-class CrawlerProcess:
+class CrawlerProcess(metaclass=object_ref):
     crawlers = property(
         lambda self: self._crawlers,
         doc="Set of :class:`crawlers <aioscpy.crawler.Crawler>`"
@@ -87,7 +86,7 @@ class CrawlerProcess:
         self.bootstrap_failed = False
         self._group = []
         install_shutdown_handlers(self._signal_shutdown)
-        std_log_aioscpy_info(settings)
+        self.ref.get("log").std_log_aioscpy_info(settings)
 
     def crawl(self, crawler_or_spidercls, *args, **kwargs):
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
@@ -122,7 +121,7 @@ class CrawlerProcess:
         spiders_cls = DependencyInjection.load_all_spider(path)
         for name, spider_cls in spiders_cls.items():
             self.crawl(spider_cls)
-            logger.debug("Loading spider({name}) from {path}", **{"name": name, "path": path})
+            self.logger.debug("Loading spider({name}) from {path}", **{"name": name, "path": path})
 
     async def stop(self):
         return await asyncio.gather(*[c.stop() for c in list(self.crawlers)])
@@ -150,19 +149,19 @@ class CrawlerProcess:
     def _signal_shutdown(self, signum, _):
         install_shutdown_handlers(self._signal_kill)
         signame = signal_names[signum]
-        logger.info("Received {signame}, shutting down gracefully. Send again to force ",
+        self.logger.info("Received {signame}, shutting down gracefully. Send again to force ",
                     **{'signame': signame})
         asyncio.create_task(self._graceful_stop_reactor())
 
     def _signal_kill(self, signum, _):
         install_shutdown_handlers(signal.SIG_IGN)
         signame = signal_names[signum]
-        logger.info('Received {signame} twice, forcing unclean shutdown',
+        self.logger.info('Received {signame} twice, forcing unclean shutdown',
                     **{'signame': signame})
         asyncio.create_task(self._force_stop_reactor())
 
     def start(self):
-        install_event_loop_tips()
+        self.ref.get("tools").install_event_loop_tips()
         try:
             asyncio.run(self.run())
         except asyncio.CancelledError:

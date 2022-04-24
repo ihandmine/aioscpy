@@ -1,8 +1,9 @@
 from aioscpy import signals
 from aioscpy.utils.log import logger
+from aioscpy import object_ref
 
 
-class Spider(object):
+class Spider(object, metaclass=object_ref):
     name = None
     custom_settings = None
 
@@ -33,7 +34,7 @@ class Spider(object):
 
     async def start_requests(self):
         for url in self.start_urls:
-            yield self.crawler.load('request')(url, dont_filter=True)
+            yield self.ref.get('request')(url, dont_filter=True)
 
     async def _parse(self, response, **kwargs):
         return self.parse(response)

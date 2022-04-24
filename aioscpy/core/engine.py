@@ -4,9 +4,10 @@ from time import time
 
 from aioscpy import signals
 from aioscpy.exceptions import DontCloseSpider
+from aioscpy import object_ref
 
 
-class Slot:
+class Slot(object, metaclass=object_ref):
 
     def __init__(self, start_requests, close_if_idle, scheduler, crawler):
         self.closing = None
@@ -29,7 +30,7 @@ class Slot:
 
     async def close(self):
         self._maybe_fire_closing()
-        await self.crawler.load("tools").task_await(self, "closing_wait")
+        await self.ref.get("tools").task_await(self, "closing_wait")
 
     def _maybe_fire_closing(self):
         if not self.inprogress:
@@ -38,7 +39,7 @@ class Slot:
             self.closing_wait = True
 
 
-class ExecutionEngine(object):
+class ExecutionEngine(object, metaclass=object_ref):
 
     def __init__(self, crawler, spider_closed_callback):
         self.lock = True
@@ -54,8 +55,10 @@ class ExecutionEngine(object):
         self.scheduler = crawler.load("scheduler")
         self.itemproc = crawler.load("item_processor")
         self.downloader = crawler.load("downloader")
-        self.logger = crawler.load("logger")
-        self.call_helper = crawler.load("tools").call_helper
+        # self.logger = crawler.load("logger")
+        # self.call_helper = crawler.load("tools").call_helper
+        # self.logger = self.ref.get("log").logger
+        self.call_helper = self.ref.get("tools").call_helper
         self._spider_closed_callback = spider_closed_callback
 
     async def start(self, spider, start_requests=None):
@@ -124,13 +127,13 @@ class ExecutionEngine(object):
 
     async def _handle_downloader_output(self, result, request, spider):
         try:
-            if isinstance(result, self.crawler.load('request')):
+            if isinstance(result, self.ref.get('request')):
                 await self.crawl(result, spider)
                 return
-            if isinstance(result, self.crawler.load('response')):
+            if isinstance(result, self.ref.get('response')):
                 result.request = request
                 logkws = self.logformatter.crawled(request, result, spider)
-                level, message, kwargs = self.crawler.load("logformatter_adapter")(logkws)
+                level, message, kwargs = self.ref.get("log").logformatter_adapter(logkws)
                 if logkws is not None:
                     self.logger.log(level, message, **kwargs)
                 await self.signals.send_catch_log(signals.response_received,
@@ -142,7 +145,7 @@ class ExecutionEngine(object):
         await self.call_helper(self.handle_spider_output, response, request, response, spider)
 
     async def call_spider(self, result, request, spider):
-        if isinstance(result, self.crawler.load('response')):
+        if isinstance(result, self.ref.get('response')):
             callback = request.callback or spider._parse
             result.request = request
             return await self.call_helper(callback, result, **result.request.cb_kwargs)

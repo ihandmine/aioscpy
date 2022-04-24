@@ -4,9 +4,10 @@ from asyncio import iscoroutinefunction
 from collections import defaultdict, deque
 
 from aioscpy.exceptions import NotConfigured
+from aioscpy import object_ref
 
 
-class MiddlewareManager:
+class MiddlewareManager(metaclass=object_ref):
     """Base class for implementing middleware managers"""
 
     component_name = 'foo middleware'

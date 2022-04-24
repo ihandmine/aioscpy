@@ -9,6 +9,7 @@ from aioscpy.utils.othtypes import dnscache, urlparse_cached
 from aioscpy import signals
 from aioscpy.middleware import DownloaderMiddlewareManager
 from aioscpy.core.downloader.http import AioHttpDownloadHandler
+from aioscpy import object_ref
 
 
 class Slot:
@@ -63,7 +64,7 @@ def _get_concurrency_delay(concurrency, spider, settings):
     return concurrency, delay
 
 
-class Downloader:
+class Downloader(object, metaclass=object_ref):
     DOWNLOAD_SLOT = 'download_slot'
 
     def __init__(self, crawler):
@@ -71,8 +72,10 @@ class Downloader:
         self.crawler = crawler
         self.slots = {}
         self.active = set()
-        self.call_helper = crawler.load("tools").call_helper
-        self.call_create_task = crawler.load("tools").call_create_task
+        # self.call_helper = crawler.load("tools").call_helper
+        # self.call_create_task = crawler.load("tools").call_create_task
+        self.call_helper = self.ref.get("tools").call_helper
+        self.call_create_task = self.ref.get("tools").call_create_task
         self.handlers = AioHttpDownloadHandler(self.settings, crawler)
         self.total_concurrency = self.settings.getint('CONCURRENT_REQUESTS')
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
@@ -131,7 +134,7 @@ class Downloader:
         if process_request_method:
             await self.call_helper(process_request_method, request)
         try:
-            if response is None or isinstance(response, self.crawler.load('response')):
+            if response is None or isinstance(response, self.ref.get('response')):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
         except (Exception, BaseException) as exc:
@@ -152,7 +155,7 @@ class Downloader:
             slot.active.remove(request)
             self.active.remove(request)
             await self.call_create_task(self._process_queue, spider, slot)
-            if isinstance(response, self.crawler.load('response')):
+            if isinstance(response, self.ref.get('response')):
                 response.request = request
             await self.call_create_task(_handle_downloader_output, response, request, spider)
 

@@ -4,8 +4,10 @@ import aiohttp
 
 from anti_header import Headers
 
+from aioscpy import object_ref
 
-class AioHttpDownloadHandler:
+
+class AioHttpDownloadHandler(object, metaclass=object_ref):
     session = None
 
     def __init__(self, settings, crawler):
@@ -50,13 +52,13 @@ class AioHttpDownloadHandler:
         proxy = request.meta.get("proxy")
         if proxy:
             kwargs["proxy"] = proxy
-            self.crawler.load("logger").debug(f"use {proxy} crawling: {request.url}")
+            self.logger.debug(f"use {proxy} crawling: {request.url}")
 
         async with aiohttp.ClientSession(**self.aiohttp_client_session_args) as session:
             async with session.request(request.method, request.url, **kwargs) as response:
                 content = await response.read()
 
-        return self.crawler.load("response")(
+        return self.ref.get("response")(
                 str(response.url),
                 status=response.status,
                 headers=response.headers,
