@@ -4,6 +4,23 @@ from importlib import import_module
 from pkgutil import iter_modules
 
 from aioscpy.settings import Settings
+from aioscpy.utils.tools import singleton
+
+
+@singleton
+class CSlot:
+
+    def __init__(self):
+        self._object_slot_cls = {}
+
+    def get(self, sets: str, default=None) -> object:
+        return self._object_slot_cls.get(sets, default)
+
+    def set(self, sets: str, obj: object):
+        self._object_slot_cls.__setitem__(sets, obj)
+
+    def empty(self):
+        return not bool(len(self._object_slot_cls))
 
 
 class Slot:
@@ -38,12 +55,13 @@ class Slot:
 
 
 class DependencyInjection(object):
-    def __init__(self, settings: Settings, crawler):
+    def __init__(self, settings: Settings = None, crawler=None):
         if not settings:
             settings = Settings()
         self.settings = settings
         self.crawler = crawler
         self.slot = Slot(settings, crawler)
+        self.c_slot = CSlot()
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -90,7 +108,9 @@ class DependencyInjection(object):
 
         if cls is None:
             obj = self.create_instance(obj, self.settings, self.crawler)
-        self.slot.set(key, obj)
+            self.slot.set(key, obj)
+        else:
+            self.c_slot.set(key, obj)
         return obj
 
     def walk_modules(self, path: str):
@@ -119,11 +139,14 @@ class DependencyInjection(object):
         else:
             return objcls(*args, **kwargs)
 
+    def inject(self):
+        for key, value in self.settings['DI_CONFIG_CLS'].items():
+            self.load_object_slot(key, value, cls=True)
+        return self.c_slot
+
     async def inject_runner(self):
         if any([not self.settings.get('DI_CONFIG'), not self.settings.get('DI_CONFIG_CLS')]):
             raise KeyError('Settings DI_CONFIG/DI_CONFIG_CLS not be None')
-        for key, value in self.settings['DI_CONFIG_CLS'].items():
-            self.load_object_slot(key, value, cls=True)
         for key, value in self.settings['DI_CONFIG'].items():
             self.load_object_slot(key, value)
         self.slot.live_beat = asyncio.create_task(self.live_beat())
@@ -133,4 +156,4 @@ class DependencyInjection(object):
             if not self.slot.is_live:
                 await asyncio.sleep(20)
                 break
-            asyncio.create_task(self.runner())
+            asyncio.create_task(self.inject_runner())
