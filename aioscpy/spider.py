@@ -1,9 +1,8 @@
 from aioscpy import signals
-from aioscpy.utils.log import logger
-from aioscpy import object_ref
+from aioscpy import call_grace_instance
 
 
-class Spider(object, metaclass=object_ref):
+class Spider(object):
     name = None
     custom_settings = None
 
@@ -13,10 +12,6 @@ class Spider(object, metaclass=object_ref):
         self.__dict__.update(kwargs)
         if not hasattr(self, 'start_urls'):
             self.start_urls = []
-
-    @property
-    def logger(self):
-        return logger
 
     def log(self, message, level='DEBUG', **kw):
         self.logger.log(level, message, **kw)
@@ -34,7 +29,7 @@ class Spider(object, metaclass=object_ref):
 
     async def start_requests(self):
         for url in self.start_urls:
-            yield self.ref.get('request')(url, dont_filter=True)
+            yield self.di.get('request')(url, dont_filter=True)
 
     async def _parse(self, response, **kwargs):
         return self.parse(response)
@@ -63,3 +58,6 @@ class Spider(object, metaclass=object_ref):
         return "<%s %r at 0x%0x>" % (type(self).__name__, self.name, id(self))
 
     __repr__ = __str__
+
+
+Spider = call_grace_instance('spider', only_instance=True)

@@ -4,10 +4,8 @@ import aiohttp
 
 from anti_header import Headers
 
-from aioscpy import object_ref
 
-
-class AioHttpDownloadHandler(object, metaclass=object_ref):
+class AioHttpDownloadHandler(object):
     session = None
 
     def __init__(self, settings, crawler):
@@ -58,7 +56,7 @@ class AioHttpDownloadHandler(object, metaclass=object_ref):
             async with session.request(request.method, request.url, **kwargs) as response:
                 content = await response.read()
 
-        return self.ref.get("response")(
+        return self.di.get("response")(
                 str(response.url),
                 status=response.status,
                 headers=response.headers,

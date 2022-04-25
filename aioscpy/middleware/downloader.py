@@ -38,7 +38,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
     async def process_response(self, spider, request, response):
         if response is None:
             raise TypeError("Received None in process_response")
-        elif isinstance(response, self.ref.get('request')):
+        elif isinstance(response, self.di.get('request')):
             return response
 
         for method in self.methods['process_response']:
@@ -46,12 +46,12 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, response=response, spider=spider)
             else:
                 response = method(request=request, response=response, spider=spider)
-            if not isinstance(response, (self.crawler.load('response'), self.ref.get('request'))):
+            if not isinstance(response, (self.crawler.load('response'), self.di.get('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_response must return Response or Request, got %s"
                     % (method.__self__.__class__.__name__, type(response))
                 )
-            if isinstance(response, self.ref.get('request')):
+            if isinstance(response, self.di.get('request')):
                 return response
         return response
 
@@ -61,7 +61,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, exception=exception, spider=spider)
             else:
                 response = method(request=request, exception=exception, spider=spider)
-            if response is not None and not isinstance(response, (self.ref.get('response'), self.ref.get('request'))):
+            if response is not None and not isinstance(response, (self.di.get('response'), self.di.get('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_exception must return None, Response or Request, got %s"
                     % (method.__self__.__class__.__name__, type(response))

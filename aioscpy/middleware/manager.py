@@ -4,10 +4,9 @@ from asyncio import iscoroutinefunction
 from collections import defaultdict, deque
 
 from aioscpy.exceptions import NotConfigured
-from aioscpy import object_ref
 
 
-class MiddlewareManager(metaclass=object_ref):
+class MiddlewareManager:
     """Base class for implementing middleware managers"""
 
     component_name = 'foo middleware'
@@ -31,7 +30,7 @@ class MiddlewareManager(metaclass=object_ref):
         enabled = []
         for clspath in mwlist:
             try:
-                mw = crawler.DI.load_object_slot(clspath.split('.')[:-1].lower(), clspath)
+                mw = crawler.DI.load_object(clspath.split('.')[:-1].lower(), clspath)
                 middlewares.append(mw)
                 enabled.append(clspath)
             except NotConfigured as e:

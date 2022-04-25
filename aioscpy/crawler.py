@@ -3,15 +3,14 @@ import asyncio
 import signal
 
 from aioscpy.settings import overridden_settings
-from aioscpy.core.engine import ExecutionEngine
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
 from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
 from aioscpy.inject import DependencyInjection
-from aioscpy import object_ref
+from aioscpy import call_grace_instance
 
 
-class Crawler(object, metaclass=object_ref):
+class Crawler(object):
 
     def __init__(self, spidercls, *args, settings=None, **kwargs):
 
@@ -42,9 +41,9 @@ class Crawler(object, metaclass=object_ref):
         try:
             await self.DI.inject_runner()
             self.engine = self._create_engine()
-            start_requests = await self.ref.get("tools").async_generator_wrapper(self.spider.start_requests())
+            start_requests = await self.di.get("tools").async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
-            await self.ref.get("tools").task_await(self, "_close_wait")
+            await self.di.get("tools").task_await(self, "_close_wait")
         except Exception as e:
             self.logger.exception(e)
             self.crawling = False
@@ -59,7 +58,7 @@ class Crawler(object, metaclass=object_ref):
         return self.spidercls.from_crawler(self, *args, **kwargs)
 
     def _create_engine(self):
-        return ExecutionEngine(self, self.stop)
+        return call_grace_instance('engine', self, self.stop)
 
     def _create_dependency(self):
         return DependencyInjection(self.settings, self)
@@ -71,7 +70,7 @@ class Crawler(object, metaclass=object_ref):
         self._close_wait = True
 
 
-class CrawlerProcess(metaclass=object_ref):
+class CrawlerProcess(object):
     crawlers = property(
         lambda self: self._crawlers,
         doc="Set of :class:`crawlers <aioscpy.crawler.Crawler>`"
@@ -86,7 +85,7 @@ class CrawlerProcess(metaclass=object_ref):
         self.bootstrap_failed = False
         self._group = []
         install_shutdown_handlers(self._signal_shutdown)
-        self.ref.get("log").std_log_aioscpy_info(settings)
+        self.di.get("log").std_log_aioscpy_info(settings)
 
     def crawl(self, crawler_or_spidercls, *args, **kwargs):
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
@@ -101,7 +100,7 @@ class CrawlerProcess(metaclass=object_ref):
         if isinstance(crawler_or_spidercls, Crawler):
             return crawler_or_spidercls
         settings = kwargs.pop('settings', self.settings)
-        return Crawler(crawler_or_spidercls, *args, settings=settings, **kwargs)
+        return call_grace_instance("crawler", crawler_or_spidercls, *args, settings=settings, **kwargs)
 
     def active_crawler(self, crawler):
         task = asyncio.create_task(crawler.crawl())
@@ -161,7 +160,7 @@ class CrawlerProcess(metaclass=object_ref):
         asyncio.create_task(self._force_stop_reactor())
 
     def start(self):
-        self.ref.get("tools").install_event_loop_tips()
+        self.di.get("tools").install_event_loop_tips()
         try:
             asyncio.run(self.run())
         except asyncio.CancelledError:
