@@ -61,7 +61,6 @@ class DependencyInjection(object):
         self.settings = settings
         self.crawler = crawler
         self.slot = Slot(settings, crawler)
-        self.c_slot = CSlot()
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -92,7 +91,8 @@ class DependencyInjection(object):
         load_all_spider_inner(dirname)
         return _class_objects
 
-    def load_object_slot(self, key: str, path: str, cls=None):
+    @staticmethod
+    def load_object(path: str):
         try:
             dot = path.rindex('.')
         except ValueError:
@@ -105,7 +105,11 @@ class DependencyInjection(object):
             obj = getattr(mod, name)
         except AttributeError:
             raise NameError("Module '%s' doesn't define any object named '%s'" % (module, name))
+        else:
+            return obj
 
+    def load_object_slot(self, key: str, path: str, cls=None):
+        obj = self.load_object(path)
         if cls is None:
             obj = self.create_instance(obj, self.settings, self.crawler)
             self.slot.set(key, obj)
@@ -132,17 +136,14 @@ class DependencyInjection(object):
             if crawler is None:
                 raise ValueError("Specify at least one of settings and crawler.")
             settings = crawler.settings
+        if not (type(objcls) == "function"):
+            objcls = call_grace_instance(objcls, only_instance=True)
         if crawler and hasattr(objcls, 'from_crawler'):
             return objcls.from_crawler(crawler, *args, **kwargs)
         elif hasattr(objcls, 'from_settings'):
             return objcls.from_settings(settings, *args, **kwargs)
         else:
             return objcls(*args, **kwargs)
-
-    def inject(self):
-        for key, value in self.settings['DI_CONFIG_CLS'].items():
-            self.load_object_slot(key, value, cls=True)
-        return self.c_slot
 
     async def inject_runner(self):
         if any([not self.settings.get('DI_CONFIG'), not self.settings.get('DI_CONFIG_CLS')]):
@@ -157,3 +158,41 @@ class DependencyInjection(object):
                 await asyncio.sleep(20)
                 break
             asyncio.create_task(self.inject_runner())
+
+
+class DependencyInjectionCls(DependencyInjection):
+
+    def __init__(self):
+        self.c_slot = CSlot()
+        self.settings = Settings()
+
+    def inject(self):
+        if self.c_slot.empty():
+            for key, value in self.settings['DI_CONFIG_CLS'].items():
+                self.load_object_slot(key, value, cls=True)
+        return self.c_slot
+
+
+_create_dependency = DependencyInjectionCls()
+load_object = _create_dependency.load_object
+settings_ins = _create_dependency.settings
+
+
+class object_ref(type):
+    def __init__(msc, *args, **kwargs):
+        msc.di = _create_dependency.inject()
+        msc.logger = msc.di.get("log").logger
+        super().__init__(*args, **kwargs)
+
+
+def call_grace_instance(obj, *args, only_instance=None, **kwargs):
+
+    if isinstance(obj, str):
+        obj = load_object(settings_ins['DI_CREATE_CLS'].get(obj))
+
+    class Inner(obj, metaclass=object_ref):
+        pass
+    if only_instance is None:
+        return Inner(*args, **kwargs)
+    else:
+        return Inner
