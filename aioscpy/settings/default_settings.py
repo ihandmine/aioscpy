@@ -17,7 +17,6 @@ LOG_ROTATION = "1 week"
 LOG_RETENTION = "30 days"
 
 DI_CONFIG = {
-    "scheduler_priority_queue": "aioscpy.queue.memory.memory_queue",
     "scheduler": "aioscpy.core.scheduler.memory.MemoryScheduler",
     "downloader": "aioscpy.core.downloader.Downloader",
     "item_processor": "aioscpy.middleware.ItemPipelineManager",
@@ -30,7 +29,15 @@ DI_CONFIG_CLS = {
     "logger": "aioscpy.utils.log.logger",
     "log": "aioscpy.utils.log",
     "exceptions": "aioscpy.exceptions",
-    "tools": "aioscpy.utils.tools"
+    "tools": "aioscpy.utils.tools",
+}
+DI_CREATE_CLS = {
+    'crawler': 'aioscpy.crawler.Crawler',
+    'crawler_process': 'aioscpy.crawler.CrawlerProcess',
+    'engine': 'aioscpy.core.engine.ExecutionEngine',
+    'spider': 'aioscpy.spider.Spider',
+    'downloader_handler': 'aioscpy.core.downloader.http.AioHttpDownloadHandler',
+    'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager'
 }
 
 # message config
