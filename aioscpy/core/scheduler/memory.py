@@ -1,9 +1,9 @@
 from aioscpy.core.scheduler import Scheduler
+from aioscpy.queue.memory import memory_queue
 
 
 class MemoryScheduler(Scheduler):
 
     @classmethod
     def from_crawler(cls, crawler):
-        _queue = crawler.load("scheduler_priority_queue")
-        return cls(_queue_df=_queue)
+        return cls(_queue_df=memory_queue())
