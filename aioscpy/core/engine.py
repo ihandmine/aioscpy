@@ -59,14 +59,14 @@ class ExecutionEngine(object):
 
     async def start(self, spider, start_requests=None):
         self.start_time = time()
-        await self.signals.send_catch_log_deferred(signal=signals.engine_started)
+        await self.signals.send_catch_log_coroutine(signal=signals.engine_started)
         self.running = True
         await self.open_spider(spider, start_requests, close_if_idle=True)
 
     async def stop(self):
         self.running = False
         await self._close_all_spiders()
-        await self.signals.send_catch_log_deferred(signal=signals.engine_stopped)
+        await self.signals.send_catch_log_coroutine(signal=signals.engine_stopped)
 
     async def close(self):
 
@@ -219,7 +219,7 @@ class ExecutionEngine(object):
         await self.call_helper(self.scheduler.open, start_requests)
         # await self.call_helper(self.scraper.open_spider, spider)
         # await self.call_helper(self.crawler.stats.open_spider, spider)
-        await self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)
+        await self.signals.send_catch_log_coroutine(signals.spider_opened, spider=spider)
         await self._next_request(spider)
         self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
 
@@ -255,7 +255,7 @@ class ExecutionEngine(object):
 
         await close_handler(slot.scheduler.close, errmsg='Scheduler close failure')
 
-        await close_handler(self.signals.send_catch_log_deferred, signal=signals.spider_closed, spider=spider,
+        await close_handler(self.signals.send_catch_log_coroutine, signal=signals.spider_closed, spider=spider,
                             reason=reason, errmsg='Error while sending spider_close signal')
 
         self.logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
