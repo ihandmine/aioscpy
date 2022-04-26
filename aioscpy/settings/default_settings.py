@@ -1,4 +1,4 @@
-BOT_NAME = "default_bot"
+BOT_NAME = "aioscpy"
 
 CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 8
@@ -49,6 +49,7 @@ RABBITMQ_TCP = {
     # "key": "message:queue",
     # "max_priority": 100
 }
+QUEUE_KEY = '%(spider)s:requests'
 
 REDIS_TCP = {
     "host": "172.16.8.147",
