@@ -39,7 +39,7 @@ async def send_catch_log(signal=Any, sender=Anonymous, *arguments, **named):
     return responses
 
 
-async def send_catch_log_deferred(signal=Any, sender=Anonymous, *arguments, **named):
+async def send_catch_log_coroutine(signal=Any, sender=Anonymous, *arguments, **named):
     """Like send_catch_log but supports returning deferreds on signal handlers.
     Returns a deferred that gets fired once all signal handlers deferreds were
     fired.

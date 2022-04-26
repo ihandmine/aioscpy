@@ -43,7 +43,7 @@ class SignalManager:
         kwargs.setdefault('sender', self.sender)
         return await _signal.send_catch_log(signal, **kwargs)
 
-    async def send_catch_log_deferred(self, signal, **kwargs):
+    async def send_catch_log_coroutine(self, signal, **kwargs):
         """
         Like :meth:`send_catch_log` but supports returning
         :class:`~twisted.internet.defer.Deferred` objects from signal handlers.
@@ -55,7 +55,7 @@ class SignalManager:
         through the :meth:`connect` method).
         """
         kwargs.setdefault('sender', self.sender)
-        return await _signal.send_catch_log_deferred(signal, **kwargs)
+        return await _signal.send_catch_log_coroutine(signal, **kwargs)
 
     def disconnect_all(self, signal, **kwargs):
         """
