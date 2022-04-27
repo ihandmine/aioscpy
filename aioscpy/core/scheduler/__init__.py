@@ -1,3 +1,4 @@
+import asyncio
 
 
 class Scheduler(object):
@@ -19,6 +20,8 @@ class Scheduler(object):
         return request
 
     async def open(self, start_requests):
+        if asyncio.iscoroutine(self.queue):
+            self.queue = await self.queue
         async for request in start_requests:
             await self.enqueue_request(request)
 
@@ -28,5 +31,5 @@ class Scheduler(object):
     def __len__(self):
         return self.queue.qsize()
 
-    def has_pending_requests(self):
+    async def has_pending_requests(self):
         return len(self) > 0
