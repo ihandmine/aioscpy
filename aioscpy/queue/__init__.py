@@ -1,12 +1,14 @@
 from aioscpy.queue.compat import COMPAT_TYPE
 
+from aioscpy.queue.convert import request_from_dict, request_to_dict
+
 
 class BaseQueue(object):
 
-    __slots__ = ["server", "key", "serializer"]
+    __slots__ = ["server", "key", "serializer", "spider"]
     __compat__ = COMPAT_TYPE
 
-    def __init__(self, server, key=None, serializer=None):
+    def __init__(self, server, spider=None, key=None, serializer=None):
         if serializer is None:
             serializer = self.__compat__[serializer or "json"]
 
@@ -14,19 +16,22 @@ class BaseQueue(object):
             raise TypeError("serializer does not implement 'loads' function: %r"
                             % serializer)
         if not hasattr(serializer, 'dumps'):
-            raise TypeError("serializer '%s' does not implement 'dumps' function: %r"
+            raise TypeError("serializer does not implement 'dumps' function: %r"
                             % serializer)
 
         self.server = server
         self.key = key or 'sp:requests'
         self.serializer = serializer
+        self.spider = spider
 
     def _encode_request(self, request: dict) -> bytes:
-        return self.serializer.dumps(request)
+        obj = request_to_dict(request, self.spider)
+        return self.serializer.dumps(obj)
 
     def _decode_request(self, encoded_request: bytes) -> dict:
         obj = self.serializer.loads(encoded_request)
-        return obj
+        return request_from_dict(obj, self.spider)
+        # return obj
 
     def __len__(self):
         raise Exception('please use function len()')
