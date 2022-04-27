@@ -8,6 +8,8 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 20
 
+SPIDER_IDLE = False
+
 # LOG CONFIG
 LOG_LEVEL = "DEBUG"
 LOG_FILE = False
@@ -17,7 +19,8 @@ LOG_ROTATION = "1 week"
 LOG_RETENTION = "30 days"
 
 DI_CONFIG = {
-    "scheduler": "aioscpy.core.scheduler.memory.MemoryScheduler",
+    # "scheduler": "aioscpy.core.scheduler.memory.MemoryScheduler",
+    "scheduler": "aioscpy.core.scheduler.redis.RedisScheduler",
     "downloader": "aioscpy.core.downloader.Downloader",
     "item_processor": "aioscpy.middleware.ItemPipelineManager",
     "log_formatter": "aioscpy.logformatter.LogFormatter",
@@ -52,8 +55,9 @@ RABBITMQ_TCP = {
 QUEUE_KEY = '%(spider)s:requests'
 
 REDIS_TCP = {
-    "host": "172.16.8.147",
+    "host": "172.16.7.172",
     "port": 6379,
     "password": "123456",
     "db": 15
 }
+REDIS_URI = "redis://:123456@172.16.7.172:6379/1"
