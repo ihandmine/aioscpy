@@ -7,8 +7,10 @@ from pprint import pprint, pformat
 
 class BaiduSpider(Spider):
     name = 'baidu'
-    custom_settings = {}
-    start_urls = ['http://www.baidu.com/'] * 10
+    custom_settings = {
+        "SPIDER_IDLE": True
+    }
+    start_urls = [f'https://www.baidu.com/?a{i}' for i in range(10)]
 
     async def process_request(self, request):
         request.headers = Header(url=request.url, platform='windows', connection=True).random

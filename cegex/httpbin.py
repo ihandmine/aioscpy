@@ -8,7 +8,7 @@ class HttpBinSpider(Spider):
     custom_settings = {
         'CONCURRENT_REQUESTS': 10
     }
-    start_urls = ['http://httpbin.org/get'] * 20
+    start_urls = [f'http://httpbin.org/get?a{i}' for i in range(20)]
 
     async def parse(self, response):
         item = await response.json
