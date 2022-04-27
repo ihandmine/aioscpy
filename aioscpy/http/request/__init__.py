@@ -50,6 +50,9 @@ class Request(object):
             self._meta = {}
         return self._meta
 
+    def get(self, key, default):
+        return self.meta.get(key, default)
+
     def _get_url(self):
         return self._url
 
