@@ -26,6 +26,7 @@ class Spider(object):
         self.crawler = crawler
         self.settings = crawler.settings
         crawler.signals.connect(self.close, signals.spider_closed)
+        crawler.signals.connect(self.spider_idle, signal=signals.spider_idle)
 
     async def start_requests(self):
         for url in self.start_urls:
@@ -53,6 +54,10 @@ class Spider(object):
         process = CrawlerProcess()
         process.crawl(cls)
         process.start()
+
+    def spider_idle(self):
+        if self.settings.get("SPIDER_IDLE", True):
+            raise self.di.get('exceptions').DontCloseSpider
 
     def __str__(self):
         return "<%s %r at 0x%0x>" % (type(self).__name__, self.name, id(self))
