@@ -7,6 +7,10 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 
 DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 20
+DOWNLOAD_HANDLER = "aioscpy.core.downloader.http.AioHttpDownloadHandler"
+# SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
+SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
+
 
 SPIDER_IDLE = False
 
@@ -19,8 +23,7 @@ LOG_ROTATION = "1 week"
 LOG_RETENTION = "30 days"
 
 DI_CONFIG = {
-    # "scheduler": "aioscpy.core.scheduler.memory.MemoryScheduler",
-    "scheduler": "aioscpy.core.scheduler.redis.RedisScheduler",
+    "scheduler": f"{SCHEDULER}",
     "downloader": "aioscpy.core.downloader.Downloader",
     "item_processor": "aioscpy.middleware.ItemPipelineManager",
     "log_formatter": "aioscpy.logformatter.LogFormatter",
@@ -39,7 +42,7 @@ DI_CREATE_CLS = {
     'crawler_process': 'aioscpy.crawler.CrawlerProcess',
     'engine': 'aioscpy.core.engine.ExecutionEngine',
     'spider': 'aioscpy.spider.Spider',
-    'downloader_handler': 'aioscpy.core.downloader.http.AioHttpDownloadHandler',
+    'downloader_handler': f'{DOWNLOAD_HANDLER}',
     'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager'
 }
 
