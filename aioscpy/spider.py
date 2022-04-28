@@ -51,7 +51,7 @@ class Spider(object):
     @classmethod
     def start(cls):
         from aioscpy.crawler import CrawlerProcess
-        process = CrawlerProcess()
+        process = call_grace_instance(CrawlerProcess)
         process.crawl(cls)
         process.start()
 

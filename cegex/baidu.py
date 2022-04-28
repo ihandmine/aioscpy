@@ -8,7 +8,7 @@ from pprint import pprint, pformat
 class BaiduSpider(Spider):
     name = 'baidu'
     custom_settings = {
-        "SPIDER_IDLE": True
+        "SPIDER_IDLE": False
     }
     start_urls = [f'https://www.baidu.com/?a{i}' for i in range(10)]
 
@@ -27,7 +27,7 @@ class BaiduSpider(Spider):
 
     async def process_item(self, item):
         pass
-        # self.logger.info("%(item)s", {'item': pformat(item)})
+        # self.logger.info("{item}", **{'item': pformat(item)})
 
 
 if __name__ == '__main__':
