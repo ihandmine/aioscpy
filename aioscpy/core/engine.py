@@ -162,10 +162,57 @@ class ExecutionEngine(object):
             except Exception as e:
                 raise Exception(f"handle spider output error, {e}")
             else:
-                item = await self.itemproc.process_item(res, spider)
-                process_item_method = getattr(spider, 'process_item', None)
-                if process_item_method:
-                    await self.call_helper(process_item_method, item)
+                await self._process_spidermw_output(res, request, response, spider)
+                # item = await self.itemproc.process_item(res, spider)
+                # process_item_method = getattr(spider, 'process_item', None)
+                # if process_item_method:
+                #     await self.call_helper(process_item_method, item)
+
+    async def _process_spidermw_output(self, output, request, response, spider):
+        # async with self.concurrent_items_semaphore:
+        if isinstance(output, self.di.get('request')):
+            await self.crawler.engine.crawl(request=output, spider=spider)
+        elif isinstance(output, dict):
+            item = await self.itemproc.process_item(output, spider)
+            process_item_method = getattr(spider, 'process_item', None)
+            if process_item_method:
+                await self.call_helper(process_item_method, item)
+            await self._itemproc_finished(output, item, response, spider)
+        elif output is None:
+            pass
+        else:
+            typename = type(output).__name__
+            self.logger.error(
+                'Spider must return request, item, or None, got %(typename)r in %(request)s',
+                {'request': request, 'typename': typename},
+                extra={'spider': spider},
+            )
+
+    async def _itemproc_finished(self, output, item, response, spider):
+        if isinstance(output, (Exception, BaseException)):
+            if isinstance(output, self.di.get('exceptions').DropItem):
+                logkws = self.logformatter.dropped(item, output, response, spider)
+                if logkws is not None:
+                    level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
+                    self.logger.log(level, message, **kwargs)
+                return await self.signals.send_catch_log_coroutine(
+                    signal=signals.item_dropped, item=item, response=response,
+                    spider=spider, exception=output)
+            else:
+                logkws = self.logformatter.item_error(item, output, response, spider)
+                level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
+                self.logger.log(level, message, **kwargs)
+                return await self.signals.send_catch_log_coroutine(
+                    signal=signals.item_error, item=item, response=response,
+                    spider=spider, failure=output)
+        else:
+            logkws = self.logformatter.scraped(output, response, spider)
+            if logkws is not None:
+                level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
+                self.logger.log(level, message, **kwargs)
+            return await self.signals.send_catch_log_coroutine(
+                signal=signals.item_scraped, item=output, response=response,
+                spider=spider)
 
     async def spider_is_idle(self, spider):
         # if not self.scraper.slot.is_idle():
