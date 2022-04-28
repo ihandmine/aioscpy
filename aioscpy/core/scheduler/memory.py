@@ -6,4 +6,4 @@ class MemoryScheduler(Scheduler):
 
     @classmethod
     def from_crawler(cls, crawler):
-        return cls(_queue_df=memory_queue())
+        return cls(_queue_df=memory_queue(), stats=crawler.stats, spider=crawler.spider)
