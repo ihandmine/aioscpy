@@ -3,7 +3,6 @@ import asyncio
 from time import time
 
 from aioscpy import signals
-from aioscpy.exceptions import DontCloseSpider
 
 
 class Slot(object):
@@ -267,8 +266,8 @@ class ExecutionEngine(object):
         await self._spider_closed_callback()
 
     async def _spider_idle(self, spider):
-        res = await self.signals.send_catch_log(signals.spider_idle, spider=spider, dont_log=DontCloseSpider)
-        if any(isinstance(x, DontCloseSpider) for _, x in res):
+        res = await self.signals.send_catch_log(signals.spider_idle, spider=spider, dont_log=self.di.get("exceptions").DontCloseSpider)
+        if any(isinstance(x, self.di.get("exceptions").DontCloseSpider) for _, x in res):
             return
         # if await self.spider_is_idle(spider):
         await self.close_spider(spider, reason='finished')
