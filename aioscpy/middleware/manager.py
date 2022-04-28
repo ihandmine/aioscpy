@@ -11,10 +11,9 @@ class MiddlewareManager:
 
     component_name = 'foo middleware'
 
-    def __init__(self, crawler=None, *middlewares):
+    def __init__(self, crawler=None, middlewares=None):
         self.crawler = crawler
         self.middlewares = middlewares
-        self.logger = crawler.load("logger")
         self.methods = defaultdict(deque)
         for mw in middlewares:
             self._add_middleware(mw)
@@ -30,22 +29,22 @@ class MiddlewareManager:
         enabled = []
         for clspath in mwlist:
             try:
-                mw = crawler.DI.load_object(clspath.split('.')[:-1].lower(), clspath)
+                mw = crawler.DI.load_object_slot(clspath.split('.')[-2], clspath)
                 middlewares.append(mw)
                 enabled.append(clspath)
             except NotConfigured as e:
                 if e.args:
                     clsname = clspath.split('.')[-1]
-                    crawler.load("logger").warning("Disabled %(clsname)s: %(eargs)s",
-                                   {'clsname': clsname, 'eargs': e.args[0]},
+                    cls.logger.warning("Disabled {clsname}: {eargs}",
+                                   **{'clsname': clsname, 'eargs': e.args[0]},
                                    extra={'crawler': crawler})
         if enabled:
-            crawler.load("logger").info("Enabled %(name)s %(componentname)ss:\n%(enabledlist)s",
-                        {'componentname': cls.component_name,
+            cls.logger.info("Enabled {name} {componentname}s:\n{enabledlist}",
+                        **{'componentname': cls.component_name,
                          'enabledlist': pprint.pformat(enabled),
                          'name': crawler.spider.name},
                         extra={'crawler': crawler})
-        return cls(crawler=crawler, *middlewares)
+        return cls(crawler=crawler, middlewares=middlewares)
 
     @classmethod
     def from_crawler(cls, crawler):
