@@ -24,9 +24,12 @@ LOG_RETENTION = "30 days"
 
 DI_CONFIG = {
     "scheduler": f"{SCHEDULER}",
+    'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager',
     "downloader": "aioscpy.core.downloader.Downloader",
     "item_processor": "aioscpy.middleware.ItemPipelineManager",
     "log_formatter": "aioscpy.logformatter.LogFormatter",
+    "extension": "aioscpy.middleware.ExtensionManager",
+
 }
 DI_CONFIG_CLS = {
     "request": "aioscpy.http.Request",
@@ -43,7 +46,7 @@ DI_CREATE_CLS = {
     'engine': 'aioscpy.core.engine.ExecutionEngine',
     'spider': 'aioscpy.spider.Spider',
     'downloader_handler': f'{DOWNLOAD_HANDLER}',
-    'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager'
+    'stats': 'aioscpy.libs.statscollectors.MemoryStatsCollector',
 }
 
 # message config
@@ -64,3 +67,22 @@ REDIS_TCP = {
     "db": 15
 }
 REDIS_URI = "redis://:123456@172.16.7.172:6379/1"
+
+
+EXTENSIONS_BASE = {
+    'aioscpy.libs.extensions.corestats.CoreStats': 0,
+    'aioscpy.libs.extensions.logstats.LogStats': 0,
+
+}
+
+DOWNLOADER_MIDDLEWARES_BASE = {
+    # Engine side
+    'aioscpy.libs.downloadermiddlewares.stats.DownloaderStats': 850,
+    # Downloader side
+}
+DOWNLOADER_STATS = True
+
+LOGSTATS_INTERVAL = 10.0
+STATS_CLASS = 'aioscpy.libs.statscollectors.MemoryStatsCollector'
+STATS_DUMP = True
+
