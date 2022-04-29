@@ -117,6 +117,18 @@ def logformatter_adapter(logkws):
 
 
 def std_log_aioscpy_info(settings):
+    from pprint import pprint, pformat
+
+    icon = """                          
+         (_)                           
+     __ _ _  ___  ___  ___ _ __  _   _ 
+    / _` | |/ _ \/ __|/ __| '_ \| | | |
+   | (_| | | (_) \__ \ (__| |_) | |_| |
+    \__,_|_|\___/|___/\___| .__/ \__, |
+                          | |     __/ |
+                          |_|    |___/ 
+    """
+    logger.info("{item}", **{'item': icon})
     logger.info("aioscpy {version} started (bot: {bot})",
                 **{'version': aioscpy.__version__, 'bot': settings['BOT_NAME']})
 
