@@ -137,7 +137,7 @@ class ExecutionEngine(object):
             self.slot.remove_request(request)
             asyncio.create_task(self._next_request(self.spider))
         response = await self.call_spider(result, request, spider)
-        await self.call_helper(self.handle_spider_output, response, request, response, spider)
+        await self.call_helper(self.handle_spider_output, response, request, result, spider)
 
     async def call_spider(self, result, request, spider):
         if isinstance(result, self.di.get('response')):
@@ -303,6 +303,8 @@ class ExecutionEngine(object):
 
         await close_handler(self.signals.send_catch_log_coroutine, signal=signals.spider_closed, spider=spider,
                             reason=reason, errmsg='Error while sending spider_close signal')
+
+        await close_handler(self.crawler.stats.close_spider, spider, reason=reason, errmsg='Stats close failure')
 
         self.logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
 

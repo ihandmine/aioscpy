@@ -5,7 +5,7 @@ class Scheduler(object):
 
     def __init__(self, _queue_df, spider, stats):
         self.queue = _queue_df
-        self.stats = None
+        self.stats = stats
         self.spider = spider
 
     @classmethod

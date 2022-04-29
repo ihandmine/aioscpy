@@ -77,7 +77,7 @@ class Downloader(object):
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
         self.ip_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_IP')
         self.randomize_delay = self.settings.getbool('RANDOMIZE_DOWNLOAD_DELAY')
-        self.middleware = call_grace_instance('downloader_middleware', only_instance=True).from_crawler(crawler)
+        self.middleware = crawler.load("downloader_middleware")
         self._slot_gc_loop = True
         asyncio.create_task(self._slot_gc(60))
 
