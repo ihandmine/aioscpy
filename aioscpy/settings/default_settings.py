@@ -82,7 +82,7 @@ DOWNLOADER_MIDDLEWARES_BASE = {
 }
 DOWNLOADER_STATS = True
 
-LOGSTATS_INTERVAL = 10.0
+LOGSTATS_INTERVAL = 60.0
 STATS_CLASS = 'aioscpy.libs.statscollectors.MemoryStatsCollector'
 STATS_DUMP = True
 
