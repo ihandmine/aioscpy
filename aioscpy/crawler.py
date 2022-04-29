@@ -30,7 +30,9 @@ class Crawler(object):
         self.crawling = False
         self.spider = self._create_spider(*args, **kwargs)
         self.engine = None
+        self.stats = call_grace_instance('stats', self)
         self.DI = self._create_dependency()
+        self.extensions = self.load('extension')
         self._close_wait = None
 
     async def crawl(self):
