@@ -27,7 +27,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, spider=spider)
             else:
                 response = method(request=request, spider=spider)
-            if response is not None and not isinstance(response, (self.crawler.load('response'), self.crawler.load('request'))):
+            if response is not None and not isinstance(response, (self.di.get("response"), self.di.get('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_request must return None, Response or Request, got %s"
                     % (method.__self__.__class__.__name__, response.__class__.__name__)
@@ -46,7 +46,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 response = await method(request=request, response=response, spider=spider)
             else:
                 response = method(request=request, response=response, spider=spider)
-            if not isinstance(response, (self.crawler.load('response'), self.di.get('request'))):
+            if not isinstance(response, (self.di.get("response"), self.di.get('request'))):
                 raise _InvalidOutput(
                     "Middleware %s.process_response must return Response or Request, got %s"
                     % (method.__self__.__class__.__name__, type(response))
