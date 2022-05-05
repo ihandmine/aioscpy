@@ -1,6 +1,9 @@
 import numbers
+import warnings
+import os
 
 from operator import itemgetter
+from importlib import import_module
 
 from aioscpy.settings import BaseSettings
 
@@ -61,3 +64,35 @@ def build_component_list(compdict, custom=None):
     _validate_values(compdict)
     compdict = without_none_values(_map_keys(compdict))
     return [k for k, v in sorted(compdict.items(), key=itemgetter(1))]
+
+
+def arglist_to_dict(arglist):
+    """Convert a list of arguments like ['arg1=val1', 'arg2=val2', ...] to a
+    dict
+    """
+    return dict(x.split('=', 1) for x in arglist)
+
+
+def inside_project():
+    scrapy_module = os.environ.get('SCRAPY_SETTINGS_MODULE')
+    if scrapy_module is not None:
+        try:
+            import_module(scrapy_module)
+        except ImportError as exc:
+            warnings.warn(f"Cannot import scrapy settings module {scrapy_module}: {exc}")
+        else:
+            return True
+    return bool(closest_scrapy_cfg())
+
+
+def closest_scrapy_cfg(path='.', prevpath=None):
+    """Return the path to the closest scrapy.cfg file by traversing the current
+    directory and its parents
+    """
+    if path == prevpath:
+        return ''
+    path = os.path.abspath(path)
+    cfgfile = os.path.join(path, 'scrapy.cfg')
+    if os.path.exists(cfgfile):
+        return cfgfile
+    return closest_scrapy_cfg(os.path.dirname(path), path)
