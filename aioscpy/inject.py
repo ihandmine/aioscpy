@@ -118,7 +118,9 @@ class DependencyInjection(object):
         return obj
 
     def walk_modules(self, path: str):
-        mods = self.slot._modules_slot
+        mods = []
+        if hasattr(self, "slot"):
+            mods = self.slot._modules_slot
         mod = import_module(path)
         mods.append(mod)
         if hasattr(mod, '__path__'):
@@ -175,6 +177,7 @@ class DependencyInjectionCls(DependencyInjection):
 
 _create_dependency = DependencyInjectionCls()
 load_object = _create_dependency.load_object
+walk_modules = _create_dependency.walk_modules
 settings_ins = _create_dependency.settings
 
 
