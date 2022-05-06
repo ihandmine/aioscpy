@@ -1,6 +1,8 @@
+import pkgutil
+
 from aioscpy.inject import call_grace_instance
 
-__version__ = "0.0.1"
+__version__ = (pkgutil.get_data(__package__, "VERSION") or b"").decode("ascii").strip()
 
 __all__ = [
     '__version__',
