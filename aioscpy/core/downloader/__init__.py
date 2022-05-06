@@ -133,7 +133,7 @@ class Downloader(object):
             if response is None or isinstance(response, self.di.get('response')):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
-        except (Exception, BaseException) as exc:
+        except (Exception, BaseException, asyncio.TimeoutError) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
