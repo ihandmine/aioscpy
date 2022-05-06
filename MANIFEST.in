@@ -1,0 +1,3 @@
+recursive-include aioscpy VERSION
+recursive-include aioscpy/templates/project *.tmpl *.cfg *.py
+recursive-include aioscpy/templates/spiders *.tmpl

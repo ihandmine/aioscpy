@@ -22,7 +22,7 @@ with open(join(dirname(__file__), 'aioscpy/VERSION'), 'rb') as f:
 
 
 class UploadCommand(Command):
-    """Support setup_bak.py upload."""
+    """Support setup.py upload."""
 
     description = "Build and publish the package."
     user_options = []
@@ -46,7 +46,7 @@ class UploadCommand(Command):
             pass
 
         self.status("Building Source and Wheel distribution...")
-        os.system("{0} setup.py sdist".format(sys.executable))
+        os.system("{0} setup.py sdist bdist_wheel".format(sys.executable))
 
         self.status("Uploading the package to PyPI via Twine...")
         os.system("twine upload dist/*")
@@ -54,13 +54,21 @@ class UploadCommand(Command):
         sys.exit()
 
 
+def list_dir(dir):
+    result = [dir]
+    for file in os.listdir(dir):
+        if os.path.isdir(os.path.join(dir, file)):
+            result.extend(list_dir(os.path.join(dir, file)))
+    return result
+
 setup(
     name=NAME,
     version=VERSION,
     author=AUTHOR,
     packages=find_packages(),
     include_package_data=True,
-    package_data={"": ["*.py", "*.tmpl", '*.cfg']},
+    package_data={"": ["*.py", "*.tmpl", "VERSION"]},
+    # data_files=[],
     install_requires=[
         "aiohttp",
         "anti-header"
@@ -95,6 +103,6 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: MacOS",
     ],
-    # Build and upload package: python3 setup_bak.py upload
-    cmdclass={"upload": UploadCommand},
+    # Build and upload package: python3 setup.py upload
+    # cmdclass={"upload": UploadCommand},
 )
