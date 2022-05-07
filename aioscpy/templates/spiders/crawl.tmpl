@@ -1,0 +1,35 @@
+from aioscpy.spider import Spider
+from anti_header import Header
+from pprint import pprint, pformat
+
+
+class $classname(Spider):
+    name = '$name'
+    custom_settings = {
+        "SPIDER_IDLE": False
+    }
+    start_urls = []
+
+    async def process_request(self, request):
+        request.headers = Header(url=request.url, platform='windows', connection=True).random
+        return request
+
+    async def process_response(self, request, response):
+        if response.status in [404, 503]:
+            return request
+        return response
+
+    async def parse(self, response):
+        item = {
+            # 'hot': '\n'.join(response.xpath('//span[@class="title-content-title"]/text()').extract()),
+        }
+        yield item
+
+    async def process_item(self, item):
+        pass
+        # self.logger.info("{item}", **{'item': pformat(item)})
+
+
+if __name__ == '__main__':
+    baidu = BaiduSpider()
+    baidu.start()
