@@ -1,7 +1,9 @@
 import asyncio
 import weakref
 import sys
+import os
 
+from configparser import ConfigParser
 from typing import Dict, Iterable, Optional, Tuple, Union
 from functools import wraps
 from asyncio import events
@@ -181,20 +183,68 @@ async def async_generator_wrapper(wrapped):
         return anonymous(wrapped)
 
 
+def closest_scrapy_cfg(path='.', prevpath=None):
+    """Return the path to the closest aioscpy.cfg file by traversing the current
+    directory and its parents
+    """
+    if path == prevpath:
+        return ''
+    path = os.path.abspath(path)
+    cfgfile = os.path.join(path, 'aioscpy.cfg')
+    if os.path.exists(cfgfile):
+        return cfgfile
+    return closest_scrapy_cfg(os.path.dirname(path), path)
+
+
+def get_sources(use_closest=True):
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    sources = [
+        '/etc/aioscpy.cfg',
+        r'c:\aioscpy\aioscpy.cfg',
+        xdg_config_home + '/aioscpy.cfg',
+        os.path.expanduser('~/.aioscpy.cfg'),
+    ]
+    if use_closest:
+        sources.append(closest_scrapy_cfg())
+    return sources
+
+
+def get_config(use_closest=True):
+    """Get Scrapy config file as a ConfigParser"""
+    sources = get_sources(use_closest)
+    cfg = ConfigParser()
+    cfg.read(sources)
+    return cfg
+
+
+def init_env(project='default', set_syspath=True):
+    """Initialize environment to use command-line tool from inside a project
+    dir. This sets the Scrapy settings module and modifies the Python path to
+    be able to locate the project module.
+    """
+    cfg = get_config()
+    if cfg.has_option('settings', project):
+        os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)
+    closest = closest_scrapy_cfg()
+    if closest:
+        projdir = os.path.dirname(closest)
+        if set_syspath and projdir not in sys.path:
+            sys.path.append(projdir)
+
+
 def get_project_settings():
     import os
     import pickle
     import warnings
 
-    # from scrapy.utils.conf import init_env
     from aioscpy.settings import Settings
     from aioscpy.exceptions import ScrapyDeprecationWarning
 
     ENVVAR = 'SCRAPY_SETTINGS_MODULE'
 
-    # if ENVVAR not in os.environ:
-    #     project = os.environ.get('SCRAPY_PROJECT', 'default')
-    #     init_env(project)
+    if ENVVAR not in os.environ:
+        project = os.environ.get('SCRAPY_PROJECT', 'default')
+        init_env(project)
     settings = Settings()
     settings_module_path = os.environ.get(ENVVAR)
     if settings_module_path:
