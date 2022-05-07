@@ -101,6 +101,8 @@ class CrawlerProcess(object):
     def create_crawler(self, crawler_or_spidercls, *args, **kwargs):
         if isinstance(crawler_or_spidercls, Crawler):
             return crawler_or_spidercls
+        if isinstance(crawler_or_spidercls, str):
+            crawler_or_spidercls = self.load_spider(spider_key=crawler_or_spidercls)
         settings = kwargs.pop('settings', self.settings)
         return call_grace_instance("crawler", crawler_or_spidercls, *args, settings=settings, **kwargs)
 
@@ -116,10 +118,16 @@ class CrawlerProcess(object):
 
         task.add_done_callback(_done)
 
-    def load_spider(self, path=None):
+    def load_spider(self, path=None, spider_key: str = None):
         if path is None:
-            raise KeyError("Not found spider path dir.")
+            path = ''.join(['./', self.settings.get("NEWSPIDER_MODULE", "spiders")])
         spiders_cls = DependencyInjection.load_all_spider(path)
+
+        if spider_key is not None:
+            if spiders_cls.get(spider_key):
+                return spiders_cls[spider_key]
+            else:
+                raise KeyError(f"Spider not found: {spider_key}")
         for name, spider_cls in spiders_cls.items():
             self.crawl(spider_cls)
             self.logger.debug("Loading spider({name}) from {path}", **{"name": name, "path": path})
