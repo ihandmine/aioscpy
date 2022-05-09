@@ -4,6 +4,9 @@ from aioscpy.commands.genspider import Command
 
 class OCommand(Command):
 
+    def short_desc(self):
+        return "Generate new spider in xxx.py using pre-defined templates"
+
     def add_options(self, parser):
         ASCommand.add_options(self, parser)
         parser.add_argument("-l", "--list", dest="list", action="store_true",

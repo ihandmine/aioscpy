@@ -116,7 +116,7 @@ class Command(ASCommand):
         print(f"    {abspath(project_dir)}\n")
         print("You can start your first spider with:")
         print(f"    cd {project_dir}")
-        print("    aioscpy genspider example")
+        print("    aioscpy genspider/onespider example")
 
     @property
     def templates_dir(self):

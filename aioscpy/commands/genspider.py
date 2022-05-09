@@ -32,7 +32,7 @@ class Command(ASCommand):
         return "[options] <name>"
 
     def short_desc(self):
-        return "Generate new spider using pre-defined templates"
+        return "Generate new spider in project using pre-defined templates"
 
     def add_options(self, parser):
         ASCommand.add_options(self, parser)
