@@ -132,11 +132,11 @@ class TextResponse(Response):
         but ``url`` can be not only an absolute URL, but also
 
         * a relative URL
-        * a :class:`~scrapy.link.Link` object, e.g. the result of
+        * a :class:`~aioscpy.link.Link` object, e.g. the result of
           :ref:`topics-link-extractors`
-        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
+        * a :class:`~aioscpy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
           ``response.css('a.my_link')[0]``
-        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), e.g.
+        * an attribute :class:`~aioscpy.selector.Selector` (not SelectorList), e.g.
           ``response.css('a::attr(href)')[0]`` or
           ``response.xpath('//img/@src')[0]``
 
@@ -175,11 +175,11 @@ class TextResponse(Response):
         an absolute URL, it can be any of the following:
 
         * a relative URL
-        * a :class:`~scrapy.link.Link` object, e.g. the result of
+        * a :class:`~aioscpy.link.Link` object, e.g. the result of
           :ref:`topics-link-extractors`
-        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
+        * a :class:`~aioscpy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
           ``response.css('a.my_link')[0]``
-        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), e.g.
+        * an attribute :class:`~aioscpy.selector.Selector` (not SelectorList), e.g.
           ``response.css('a::attr(href)')[0]`` or
           ``response.xpath('//img/@src')[0]``
 

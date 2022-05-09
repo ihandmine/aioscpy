@@ -183,7 +183,7 @@ async def async_generator_wrapper(wrapped):
         return anonymous(wrapped)
 
 
-def closest_scrapy_cfg(path='.', prevpath=None):
+def closest_aioscpy_cfg(path='.', prevpath=None):
     """Return the path to the closest aioscpy.cfg file by traversing the current
     directory and its parents
     """
@@ -193,7 +193,7 @@ def closest_scrapy_cfg(path='.', prevpath=None):
     cfgfile = os.path.join(path, 'aioscpy.cfg')
     if os.path.exists(cfgfile):
         return cfgfile
-    return closest_scrapy_cfg(os.path.dirname(path), path)
+    return closest_aioscpy_cfg(os.path.dirname(path), path)
 
 
 def get_sources(use_closest=True):
@@ -205,12 +205,12 @@ def get_sources(use_closest=True):
         os.path.expanduser('~/.aioscpy.cfg'),
     ]
     if use_closest:
-        sources.append(closest_scrapy_cfg())
+        sources.append(closest_aioscpy_cfg())
     return sources
 
 
 def get_config(use_closest=True):
-    """Get Scrapy config file as a ConfigParser"""
+    """Get Aioscpy config file as a ConfigParser"""
     sources = get_sources(use_closest)
     cfg = ConfigParser()
     cfg.read(sources)
@@ -219,13 +219,13 @@ def get_config(use_closest=True):
 
 def init_env(project='default', set_syspath=True):
     """Initialize environment to use command-line tool from inside a project
-    dir. This sets the Scrapy settings module and modifies the Python path to
+    dir. This sets the Aioscpy settings module and modifies the Python path to
     be able to locate the project module.
     """
     cfg = get_config()
     if cfg.has_option('settings', project):
-        os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)
-    closest = closest_scrapy_cfg()
+        os.environ['AIOSCPY_SETTINGS_MODULE'] = cfg.get('settings', project)
+    closest = closest_aioscpy_cfg()
     if closest:
         projdir = os.path.dirname(closest)
         if set_syspath and projdir not in sys.path:
@@ -238,27 +238,27 @@ def get_project_settings():
     import warnings
 
     from aioscpy.settings import Settings
-    from aioscpy.exceptions import ScrapyDeprecationWarning
+    from aioscpy.exceptions import AioscpyDeprecationWarning
 
-    ENVVAR = 'SCRAPY_SETTINGS_MODULE'
+    ENVVAR = 'AIOSCPY_SETTINGS_MODULE'
 
     if ENVVAR not in os.environ:
-        project = os.environ.get('SCRAPY_PROJECT', 'default')
+        project = os.environ.get('AIOSCPY_PROJECT', 'default')
         init_env(project)
     settings = Settings()
     settings_module_path = os.environ.get(ENVVAR)
     if settings_module_path:
         settings.setmodule(settings_module_path, priority='project')
 
-    pickled_settings = os.environ.get("SCRAPY_PICKLED_SETTINGS_TO_OVERRIDE")
+    pickled_settings = os.environ.get("AIOSCPY_PICKLED_SETTINGS_TO_OVERRIDE")
     if pickled_settings:
         warnings.warn("Use of environment variable "
-                      "'SCRAPY_PICKLED_SETTINGS_TO_OVERRIDE' "
-                      "is deprecated.", ScrapyDeprecationWarning)
+                      "'AIOSCPY_PICKLED_SETTINGS_TO_OVERRIDE' "
+                      "is deprecated.", AioscpyDeprecationWarning)
         settings.setdict(pickle.loads(pickled_settings), priority='project')
 
-    scrapy_envvars = {k[7:]: v for k, v in os.environ.items() if
-                      k.startswith('SCRAPY_')}
+    aioscpy_envvars = {k[7:]: v for k, v in os.environ.items() if
+                      k.startswith('AIOSCPY_')}
     valid_envvars = {
         'CHECK',
         'PICKLED_SETTINGS_TO_OVERRIDE',
@@ -266,16 +266,16 @@ def get_project_settings():
         'PYTHON_SHELL',
         'SETTINGS_MODULE',
     }
-    setting_envvars = {k for k in scrapy_envvars if k not in valid_envvars}
+    setting_envvars = {k for k in aioscpy_envvars if k not in valid_envvars}
     if setting_envvars:
         setting_envvar_list = ', '.join(sorted(setting_envvars))
         warnings.warn(
-            'Use of environment variables prefixed with SCRAPY_ to override '
+            'Use of environment variables prefixed with AIOSCPY_ to override '
             'settings is deprecated. The following environment variables are '
             f'currently defined: {setting_envvar_list}',
-            ScrapyDeprecationWarning
+            AioscpyDeprecationWarning
         )
-    settings.setdict(scrapy_envvars, priority='project')
+    settings.setdict(aioscpy_envvars, priority='project')
 
     return settings
 

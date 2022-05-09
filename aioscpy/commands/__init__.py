@@ -124,7 +124,7 @@ class BaseRunSpiderCommand(ASCommand):
 
 class ASHelpFormatter(argparse.HelpFormatter):
     """
-    Help Formatter for scrapy command line help messages.
+    Help Formatter for aioscpy command line help messages.
     """
     def __init__(self, prog, indent_increment=2, max_help_position=24, width=None):
         super().__init__(prog, indent_increment=indent_increment,

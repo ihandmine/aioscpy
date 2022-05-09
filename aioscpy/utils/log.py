@@ -7,7 +7,7 @@ import aioscpy
 
 from loguru import logger
 
-from aioscpy.exceptions import ScrapyDeprecationWarning
+from aioscpy.exceptions import AioscpyDeprecationWarning
 from aioscpy.settings import Settings
 
 
@@ -102,12 +102,12 @@ class LogFormatter(object):
 def logformatter_adapter(logkws):
     if not {'level', 'msg', 'args'} <= set(logkws):
         warnings.warn('Missing keys in LogFormatter method',
-                      ScrapyDeprecationWarning)
+                      AioscpyDeprecationWarning)
 
     if 'format' in logkws:
         warnings.warn('`format` key in LogFormatter methods has been '
                       'deprecated, use `msg` instead',
-                      ScrapyDeprecationWarning)
+                      AioscpyDeprecationWarning)
 
     level = logkws.get('level', 'INFO')
     message = logkws.get('format', logkws.get('msg'))

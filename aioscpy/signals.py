@@ -1,5 +1,5 @@
 """
-aioscpy like for Scrapy signals
+aioscpy like for Aioscpy signals
 
 These signals are documented in docs/topics/signals.rst. Please don't add new
 signals here without documenting them there.

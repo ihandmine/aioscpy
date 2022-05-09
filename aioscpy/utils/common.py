@@ -74,18 +74,18 @@ def arglist_to_dict(arglist):
 
 
 def inside_project():
-    scrapy_module = os.environ.get('SCRAPY_SETTINGS_MODULE')
-    if scrapy_module is not None:
+    aioscpy_module = os.environ.get('AIOSCPY_SETTINGS_MODULE')
+    if aioscpy_module is not None:
         try:
-            import_module(scrapy_module)
+            import_module(aioscpy_module)
         except ImportError as exc:
-            warnings.warn(f"Cannot import scrapy settings module {scrapy_module}: {exc}")
+            warnings.warn(f"Cannot import aioscpy settings module {aioscpy_module}: {exc}")
         else:
             return True
-    return bool(closest_scrapy_cfg())
+    return bool(closest_aioscpy_cfg())
 
 
-def closest_scrapy_cfg(path='.', prevpath=None):
+def closest_aioscpy_cfg(path='.', prevpath=None):
     """Return the path to the closest aioscpy.cfg file by traversing the current
     directory and its parents
     """
@@ -95,4 +95,4 @@ def closest_scrapy_cfg(path='.', prevpath=None):
     cfgfile = os.path.join(path, 'aioscpy.cfg')
     if os.path.exists(cfgfile):
         return cfgfile
-    return closest_scrapy_cfg(os.path.dirname(path), path)
+    return closest_aioscpy_cfg(os.path.dirname(path), path)

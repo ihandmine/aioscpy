@@ -116,7 +116,7 @@ class Response(object):
         """
         Return a :class:`~.Request` instance to follow a link ``url``.
         It accepts the same arguments as ``Request.__init__`` method,
-        but ``url`` can be a relative URL or a ``scrapy.link.Link`` object,
+        but ``url`` can be a relative URL or a ``aioscpy.link.Link`` object,
         not only an absolute URL.
 
         :class:`~.TextResponse` provides a :meth:`~.TextResponse.follow`
@@ -157,7 +157,7 @@ class Response(object):
 
         Return an iterable of :class:`~.Request` instances to follow all links
         in ``urls``. It accepts the same arguments as ``Request.__init__`` method,
-        but elements of ``urls`` can be relative URLs or :class:`~scrapy.link.Link` objects,
+        but elements of ``urls`` can be relative URLs or :class:`~aioscpy.link.Link` objects,
         not only absolute URLs.
 
         :class:`~.TextResponse` provides a :meth:`~.TextResponse.follow_all`

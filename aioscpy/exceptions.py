@@ -1,5 +1,5 @@
 """
-Scrapy core exceptions
+Aioscpy core exceptions
 
 These exceptions are documented in docs/topics/exceptions.rst. Please don't add
 new exceptions here without documenting them there.
@@ -77,7 +77,7 @@ class UsageError(Exception):
         super(UsageError, self).__init__(*a, **kw)
 
 
-class ScrapyDeprecationWarning(Warning):
+class AioscpyDeprecationWarning(Warning):
     """Warning category for deprecated features, since the default
     DeprecationWarning is silenced on Python 2.7+
     """

@@ -20,7 +20,7 @@ SETTINGS_PRIORITIES = {
 def get_settings_priority(priority):
     """
     Small helper function that looks up a given string priority in the
-    :attr:`~scrapy.settings.SETTINGS_PRIORITIES` dictionary and returns its
+    :attr:`~aioscpy.settings.SETTINGS_PRIORITIES` dictionary and returns its
     numerical value, or directly returns a given numerical priority.
     """
     if isinstance(priority, str):
@@ -66,16 +66,16 @@ class BaseSettings(MutableMapping):
 
     Key-value entries can be passed on initialization with the ``values``
     argument, and they would take the ``priority`` level (unless ``values`` is
-    already an instance of :class:`~scrapy.settings.BaseSettings`, in which
+    already an instance of :class:`~aioscpy.settings.BaseSettings`, in which
     case the existing priority levels will be kept).  If the ``priority``
     argument is a string, the priority name will be looked up in
-    :attr:`~scrapy.settings.SETTINGS_PRIORITIES`. Otherwise, a specific integer
+    :attr:`~aioscpy.settings.SETTINGS_PRIORITIES`. Otherwise, a specific integer
     should be provided.
 
     Once the object is created, new settings can be loaded or updated with the
-    :meth:`~scrapy.settings.BaseSettings.set` method, and can be accessed with
+    :meth:`~aioscpy.settings.BaseSettings.set` method, and can be accessed with
     the square bracket notation of dictionaries, or with the
-    :meth:`~scrapy.settings.BaseSettings.get` method of the instance and its
+    :meth:`~aioscpy.settings.BaseSettings.get` method of the instance and its
     value conversion variants. When requesting a stored key, the value with the
     highest priority will be retrieved.
     """
@@ -182,9 +182,9 @@ class BaseSettings(MutableMapping):
         Get a setting value as a dictionary. If the setting original type is a
         dictionary, a copy of it will be returned. If it is a string it will be
         evaluated as a JSON dictionary. In the case that it is a
-        :class:`~scrapy.settings.BaseSettings` instance itself, it will be
+        :class:`~aioscpy.settings.BaseSettings` instance itself, it will be
         converted to a dictionary, containing all its current settings values
-        as they would be returned by :meth:`~scrapy.settings.BaseSettings.get`,
+        as they would be returned by :meth:`~aioscpy.settings.BaseSettings.get`,
         and losing all information about priority and mutability.
 
         :param name: the setting name
@@ -226,7 +226,7 @@ class BaseSettings(MutableMapping):
         """
         Return the numerical value of the highest priority present throughout
         all settings, or the numerical value for ``default`` from
-        :attr:`~scrapy.settings.SETTINGS_PRIORITIES` if there are no settings
+        :attr:`~aioscpy.settings.SETTINGS_PRIORITIES` if there are no settings
         stored.
         """
         if len(self) > 0:
@@ -242,7 +242,7 @@ class BaseSettings(MutableMapping):
         Store a key/value attribute with a given priority.
 
         Settings should be populated *before* configuring the Crawler object
-        (through the :meth:`~scrapy.crawler.Crawler.configure` method),
+        (through the :meth:`~aioscpy.crawler.Crawler.configure` method),
         otherwise they won't have any effect.
 
         :param name: the setting name
@@ -252,7 +252,7 @@ class BaseSettings(MutableMapping):
         :type value: object
 
         :param priority: the priority of the setting. Should be a key of
-            :attr:`~scrapy.settings.SETTINGS_PRIORITIES` or an integer
+            :attr:`~aioscpy.settings.SETTINGS_PRIORITIES` or an integer
         :type priority: str or int
         """
         self._assert_mutability()
@@ -273,14 +273,14 @@ class BaseSettings(MutableMapping):
         Store settings from a module with a given priority.
 
         This is a helper function that calls
-        :meth:`~scrapy.settings.BaseSettings.set` for every globally declared
+        :meth:`~aioscpy.settings.BaseSettings.set` for every globally declared
         uppercase variable of ``module`` with the provided ``priority``.
 
         :param module: the module or the path of the module
         :type module: types.ModuleType or str
 
         :param priority: the priority of the settings. Should be a key of
-            :attr:`~scrapy.settings.SETTINGS_PRIORITIES` or an integer
+            :attr:`~aioscpy.settings.SETTINGS_PRIORITIES` or an integer
         :type priority: str or int
         """
         self._assert_mutability()
@@ -295,21 +295,21 @@ class BaseSettings(MutableMapping):
         Store key/value pairs with a given priority.
 
         This is a helper function that calls
-        :meth:`~scrapy.settings.BaseSettings.set` for every item of ``values``
+        :meth:`~aioscpy.settings.BaseSettings.set` for every item of ``values``
         with the provided ``priority``.
 
         If ``values`` is a string, it is assumed to be JSON-encoded and parsed
         into a dict with ``json.loads()`` first. If it is a
-        :class:`~scrapy.settings.BaseSettings` instance, the per-key priorities
+        :class:`~aioscpy.settings.BaseSettings` instance, the per-key priorities
         will be used and the ``priority`` parameter ignored. This allows
         inserting/updating settings with different priorities with a single
         command.
 
         :param values: the settings names and values
-        :type values: dict or string or :class:`~scrapy.settings.BaseSettings`
+        :type values: dict or string or :class:`~aioscpy.settings.BaseSettings`
 
         :param priority: the priority of the settings. Should be a key of
-            :attr:`~scrapy.settings.SETTINGS_PRIORITIES` or an integer
+            :attr:`~aioscpy.settings.SETTINGS_PRIORITIES` or an integer
         :type priority: str or int
         """
         self._assert_mutability()
@@ -390,7 +390,7 @@ class BaseSettings(MutableMapping):
         settings.
 
         This method can be useful for example for printing settings
-        in Scrapy shell.
+        in Aioscpy shell.
         """
         settings = self.copy()
         return settings._to_dict()
@@ -428,11 +428,11 @@ class _DictProxy(MutableMapping):
 
 class Settings(BaseSettings):
     """
-    This object stores Scrapy settings for the configuration of internal
+    This object stores Aioscpy settings for the configuration of internal
     components, and can be used for any further customization.
 
     It is a direct subclass and supports all methods of
-    :class:`~scrapy.settings.BaseSettings`. Additionally, after instantiation
+    :class:`~aioscpy.settings.BaseSettings`. Additionally, after instantiation
     of this class, the new object will have the global default settings
     described on :ref:`topics-settings-ref` already populated.
     """

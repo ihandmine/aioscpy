@@ -62,7 +62,7 @@ class Command(ASCommand):
         was reduced for this case.
 
         More info at:
-        https://github.com/scrapy/scrapy/pull/2005
+        https://github.com/aioscpy/aioscpy/pull/2005
         """
         ignore = IGNORE
         names = os.listdir(src)
@@ -111,7 +111,7 @@ class Command(ASCommand):
             path = join(*paths)
             tplfile = join(project_dir, string.Template(path).substitute(project_name=project_name))
             render_templatefile(tplfile, project_name=project_name, ProjectName=string_camelcase(project_name))
-        print(f"New Scrapy project '{project_name}', using template directory "
+        print(f"New Aioscpy project '{project_name}', using template directory "
               f"'{self.templates_dir}', created in:")
         print(f"    {abspath(project_dir)}\n")
         print("You can start your first spider with:")

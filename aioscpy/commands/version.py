@@ -21,7 +21,7 @@ class Command(ASCommand):
 
     def run(self, args, opts):
         # if opts.verbose:
-        #     versions = scrapy_components_versions()
+        #     versions = aioscpy_components_versions()
         #     width = max(len(n) for (n, _) in versions)
         #     for name, version in versions:
         #         print(f"{name:<{width}} : {version}")
