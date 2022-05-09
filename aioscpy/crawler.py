@@ -41,13 +41,15 @@ class Crawler(object):
         self.crawling = True
 
         try:
+            if not self.spider.start_urls:
+                raise self.di.get("exceptions").UsageError("Crawler not found task exists in spider.start_urls.")
             await self.DI.inject_runner()
             self.engine = self._create_engine()
             start_requests = await self.di.get("tools").async_generator_wrapper(self.spider.start_requests())
             await self.engine.start(self.spider, start_requests)
             await self.di.get("tools").task_await(self, "_close_wait")
         except Exception as e:
-            self.logger.exception(e)
+            self.logger.error(e)
             self.crawling = False
             if self.engine is not None:
                 await self.engine.close()
