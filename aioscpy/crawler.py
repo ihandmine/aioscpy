@@ -41,7 +41,7 @@ class Crawler(object):
         self.crawling = True
 
         try:
-            if not self.spider.start_urls:
+            if not self.spider.start_urls and "memory" in self.settings['SCHEDULER']:
                 raise self.di.get("exceptions").UsageError("Crawler not found task exists in spider.start_urls.")
             await self.DI.inject_runner()
             self.engine = self._create_engine()
