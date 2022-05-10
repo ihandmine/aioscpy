@@ -8,7 +8,8 @@ import aioscpy
 from loguru import logger
 
 from aioscpy.exceptions import AioscpyDeprecationWarning
-from aioscpy.settings import Settings
+# from aioscpy.settings import Settings
+from aioscpy.utils.tools import get_project_settings
 
 
 def set_log_config(formatter: str, settings):
@@ -80,7 +81,7 @@ class LogFormatter(object):
 
     @classmethod
     def get_logger(cls, log, name=None):
-        settings = Settings()
+        settings = get_project_settings()
         log_config = set_log_config(cls.simple_formatter, settings)
         config = log_config.pop('default', {})
         if name:
