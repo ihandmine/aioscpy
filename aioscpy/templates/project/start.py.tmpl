@@ -1,17 +1,14 @@
 from aioscpy import call_grace_instance
 from aioscpy.utils.tools import get_project_settings
 
-"""start spider method one:
-from aioscpy.crawler import CrawlerProcess
-from spiders.$project_name import ${ProjectName}Spider
-from aioscpy.utils.tools import get_project_settings
 
-process = CrawlerProcess(settings=get_project_settings())
-process.crawl(${ProjectName}Spider)
-process.start()
-"""
+def load_file_to_execute():
+    process = call_grace_instance("crawler_process", get_project_settings())
+    process.load_spider(path='./spiders')
+    process.start()
 
 
-process = call_grace_instance("crawler_process", get_project_settings())
-process.load_spider(path='./spiders')
-process.start()
+def load_name_to_execute():
+    process = call_grace_instance("crawler_process", get_project_settings())
+    process.crawl('spider_name')
+    process.start()
