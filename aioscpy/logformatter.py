@@ -3,7 +3,7 @@ import os
 from aioscpy.utils.tools import referer_str
 
 
-SCRAPEDMSG = "Scraped from {src}s" + os.linesep + "{item}"
+SCRAPEDMSG = "Scraped from {src}" + os.linesep + "{item}"
 DROPPEDMSG = "Dropped: {exception}" + os.linesep + "{item}"
 CRAWLEDMSG = "Crawled ({status}) {request}{request_flags} (referer: {referer}){response_flags}"
 ITEMERRORMSG = "Error processing {item}"
