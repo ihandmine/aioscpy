@@ -50,23 +50,23 @@ DI_CREATE_CLS = {
 }
 
 # message config
-RABBITMQ_TCP = {
-    "host": "172.16.8.147",
-    # "port": 5672,
-    # "username": "admin",
-    # "password": "admin",
-    # "key": "message:queue",
-    # "max_priority": 100
-}
+# RABBITMQ_TCP = {
+#     "host": "172.16.8.147",
+#     # "port": 5672,
+#     # "username": "admin",
+#     # "password": "admin",
+#     # "key": "message:queue",
+#     # "max_priority": 100
+# }
 QUEUE_KEY = '%(spider)s:requests'
 
-REDIS_TCP = {
-    "host": "172.16.7.172",
-    "port": 6379,
-    "password": "123456",
-    "db": 15
-}
-REDIS_URI = "redis://:123456@172.16.7.172:6379/1"
+# REDIS_TCP = {
+#     "host": "172.16.7.172",
+#     "port": 6379,
+#     "password": "123456",
+#     "db": 15
+# }
+# REDIS_URI = "redis://:123456@172.16.7.172:6379/1"
 
 
 EXTENSIONS_BASE = {
