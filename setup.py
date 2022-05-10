@@ -63,7 +63,10 @@ setup(
     package_data={"": ["*.py", "*.tmpl", '*.cfg']},
     install_requires=[
         "aiohttp",
-        "anti-header"
+        "anti-header",
+        "w3lib",
+        "parsel",
+        "PyDispatcher"
     ],
     description=DESCRIPTION,
     long_description=long_description,

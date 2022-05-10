@@ -1,0 +1,8 @@
+aiohttp~=3.8.1
+w3lib~=1.22.0
+parsel~=1.6.0
+redis~=3.5.3
+aioredis~=2.0.1
+pika~=1.2.0
+loguru~=0.5.3
+PyDispatcher~=2.0.5
