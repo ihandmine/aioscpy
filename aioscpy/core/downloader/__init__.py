@@ -128,22 +128,23 @@ class Downloader(object):
         response = await self.middleware.process_request(spider, request)
         process_request_method = getattr(spider, "process_request", None)
         if process_request_method:
-            await self.call_helper(process_request_method, request)
+            response = await self.call_helper(process_request_method, request)
         try:
-            if response is None or isinstance(response, self.di.get('response')):
+            if response is None or isinstance(response, self.di.get('request')):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
         except (Exception, BaseException, asyncio.TimeoutError) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
+            self.logger.error(type(exc).__name__)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
-                await self.call_helper(process_exception_method, request, exc)
+                response = await self.call_helper(process_exception_method, request, exc)
         else:
             try:
                 response = await self.middleware.process_response(spider, request, response)
                 process_response_method = getattr(spider, "process_response", None)
                 if process_response_method:
-                    await self.call_helper(process_response_method, request, response)
+                    response = await self.call_helper(process_response_method, request, response)
             except (Exception, BaseException) as exc:
                 response = exc
         finally:
