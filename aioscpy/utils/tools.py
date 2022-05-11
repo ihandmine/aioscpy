@@ -2,12 +2,17 @@ import asyncio
 import weakref
 import sys
 import os
+import pickle
+import warnings
 
 from configparser import ConfigParser
 from typing import Dict, Iterable, Optional, Tuple, Union
 from functools import wraps
 from asyncio import events
 from types import CoroutineType, GeneratorType, AsyncGeneratorType
+
+from aioscpy.settings import Settings
+from aioscpy.exceptions import AioscpyDeprecationWarning
 
 
 async def call_create_task(f, *args, **kwargs):
@@ -224,7 +229,7 @@ def init_env(project='default', set_syspath=True):
     """
     cfg = get_config()
     if cfg.has_option('settings', project):
-        os.environ['AIOSCPY_SETTINGS_MODULE'] = cfg.get('settings', project)
+        os.environ['SETTINGS_MODULE'] = cfg.get('settings', project)
     closest = closest_aioscpy_cfg()
     if closest:
         projdir = os.path.dirname(closest)
@@ -233,14 +238,8 @@ def init_env(project='default', set_syspath=True):
 
 
 def get_project_settings():
-    import os
-    import pickle
-    import warnings
 
-    from aioscpy.settings import Settings
-    from aioscpy.exceptions import AioscpyDeprecationWarning
-
-    ENVVAR = 'AIOSCPY_SETTINGS_MODULE'
+    ENVVAR = 'SETTINGS_MODULE'
 
     if ENVVAR not in os.environ:
         project = os.environ.get('AIOSCPY_PROJECT', 'default')
@@ -250,18 +249,10 @@ def get_project_settings():
     if settings_module_path:
         settings.setmodule(settings_module_path, priority='project')
 
-    pickled_settings = os.environ.get("AIOSCPY_PICKLED_SETTINGS_TO_OVERRIDE")
-    if pickled_settings:
-        warnings.warn("Use of environment variable "
-                      "'AIOSCPY_PICKLED_SETTINGS_TO_OVERRIDE' "
-                      "is deprecated.", AioscpyDeprecationWarning)
-        settings.setdict(pickle.loads(pickled_settings), priority='project')
-
     aioscpy_envvars = {k[7:]: v for k, v in os.environ.items() if
                       k.startswith('AIOSCPY_')}
     valid_envvars = {
         'CHECK',
-        'PICKLED_SETTINGS_TO_OVERRIDE',
         'PROJECT',
         'PYTHON_SHELL',
         'SETTINGS_MODULE',
