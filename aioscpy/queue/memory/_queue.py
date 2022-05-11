@@ -13,7 +13,7 @@ class PriorityQueue(BaseQueue):
         """Return the length of the queue"""
         return self.server.qsize()
 
-    async def push(self, request: dict):
+    async def push(self, request):
         data = self._encode_request(request)
         await self.server.put(data)
 

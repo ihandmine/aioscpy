@@ -11,7 +11,7 @@ class PriorityQueue(BaseQueue):
     async def qsize(self) -> int:
         return await self.server.zcard(self.key)
 
-    async def push(self, request: dict):
+    async def push(self, request):
         data = self._encode_request(request)
         score = -request.get('priority', 1)
         await self.server.zadd(self.key, {data: score})

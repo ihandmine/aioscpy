@@ -24,7 +24,7 @@ class BaseQueue(object):
         self.serializer = serializer
         self.spider = spider
 
-    def _encode_request(self, request: dict) -> bytes:
+    def _encode_request(self, request) -> bytes:
         obj = request_to_dict(request, self.spider)
         return self.serializer.dumps(obj)
 
