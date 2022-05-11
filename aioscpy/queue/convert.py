@@ -7,6 +7,7 @@ from aioscpy import call_grace_instance
 from aioscpy.http import Request
 from aioscpy.utils.tools import to_unicode
 from aioscpy.inject import load_object
+from anti_header import Headers
 
 
 def request_to_dict(request, spider=None):
@@ -36,8 +37,8 @@ def request_to_dict(request, spider=None):
         'flags': request.flags,
         'cb_kwargs': request.cb_kwargs,
     }
-    if type(request) is not Request:
-        d['_class'] = request.__module__ + '.' + request.__class__.__name__
+    # if type(request) is not Request:
+    #     d['_class'] = request.__module__ + '.' + request.__class__.__name__
     return d
 
 
@@ -60,7 +61,7 @@ def request_from_dict(d, spider=None):
             callback=cb,
             errback=eb,
             method=d.get('method', 'GET'),
-            headers=d.get('headers'),
+            headers=Headers(d.get('headers', {})),
             body=d.get('body', None),
             cookies=d.get('cookies'),
             meta=d.get('meta'),
