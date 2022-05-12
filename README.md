@@ -1,6 +1,6 @@
 
 
-![aioscpy](C:\Users\Eccang\Desktop\aioscpy.png)
+![aioscpy](./doc/images/aioscpy.png)
 
 ### Aioscpy
 
@@ -44,7 +44,7 @@ cd project_quotes
 aioscpy genspider quotes 
 ```
 
-![image-20220512172400820](C:\Users\Eccang\AppData\Roaming\Typora\typora-user-images\image-20220512172400820.png)
+![tree](./doc/images/tree.png)
 
 quotes.py:
 
@@ -131,7 +131,7 @@ aioscpy crawl quotes
 aioscpy runspider quotes.py
 ```
 
-![image-20220512175025994](C:\Users\Eccang\AppData\Roaming\Typora\typora-user-images\image-20220512175025994.png)
+![run](./doc/images/run.png)
 
 start.py:
 
