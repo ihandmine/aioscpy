@@ -4,36 +4,36 @@
 
 ### Aioscpy
 
-An asyncio + aiolibs crawler  imitate scrapy framework
+基于asyncio及aio全家桶, 使用scrapy框架流程及标准的一个异步爬虫框架
 
-English | [中文](./doc/README_ZH.md)
+[英文](../README.md)| 中文
 
-### Overview
+### 概述
 
-Aioscpy framework is base on opensource project Scrapy & scrapy_redis.
+Aioscpy框架基于开源项目Scrapy & scrapy_redis。
 
-Aioscpy is a fast high-level web crawling and web scraping framework, used to crawl websites and extract structured data from their pages.
+Aioscpy是一个快速的高级web爬行和web抓取框架，用于抓取网站并从其页面提取结构化数据。
 
-Dynamic variable injection is implemented and asynchronous coroutine feature support.
+实现了动态变量注入和异步协程功能。
 
-Distributed crawling/scraping.
+分布式爬行和抓取。
 
-### Requirements
+### 需求
 
 - Python 3.7+
 - Works on Linux, Windows, macOS, BSD
 
-### Install
+### 安装
 
-The quick way:
+快速安装方式:
 
 ```shell
 pip install aioscpy
 ```
 
-### Usage
+### 用法
 
-create project spider:
+创建项目爬虫:
 
 ```shell
 aioscpy startproject project_quotes
@@ -74,7 +74,7 @@ class QuotesSpider(Spider):
 
 ```
 
-create single script spider:
+创建单个爬虫脚本:
 
 ```shell
 aioscpy onespider single_quotes
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     quotes.start()
 ```
 
-run the spider:
+运行爬虫:
 
 ```shell
 aioscpy crawl quotes
@@ -157,17 +157,17 @@ def load_name_to_execute():
     process.start()
 ```
 
-more commands:
+更多命令:
 
 ```shell
 aioscpy -h
 ```
 
-### Ready 
+### 准备
 
-please submit your sugguestion to owner by issue
+请向我通过issue的方式提出您的建议
 
-## Thanks
+## 感谢
 
 [aiohttp](https://github.com/aio-libs/aiohttp/)
 
