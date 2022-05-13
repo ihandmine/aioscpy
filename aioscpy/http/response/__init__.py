@@ -2,6 +2,7 @@ from typing import Generator
 from urllib.parse import urljoin
 
 from aioscpy.http.request import Request
+from aioscpy import call_grace_instance
 from aioscpy.utils.tools import obsolete_setter
 
 
@@ -112,58 +113,29 @@ class Response(object):
     def follow(self, url, callback=None, method='GET', headers=None, body=None,
                cookies=None, meta=None, encoding='utf-8', priority=0,
                dont_filter=False, errback=None, cb_kwargs=None, flags=None) -> Request:
-        # type: (...) -> Request
-        """
-        Return a :class:`~.Request` instance to follow a link ``url``.
-        It accepts the same arguments as ``Request.__init__`` method,
-        but ``url`` can be a relative URL or a ``aioscpy.link.Link`` object,
-        not only an absolute URL.
 
-        :class:`~.TextResponse` provides a :meth:`~.TextResponse.follow`
-        method which supports selectors in addition to absolute/relative URLs
-        and Link objects.
-
-        .. versionadded:: 2.0
-           The *flags* parameter.
-        """
-        # if isinstance(url, Link):
-        #     url = url.url
-        # elif url is None:
-        #     raise ValueError("url can't be None")
         url = self.urljoin(url)
 
-        return Request(
-            url=url,
-            callback=callback,
-            method=method,
-            headers=headers,
-            body=body,
-            cookies=cookies,
-            meta=meta,
-            encoding=encoding,
-            priority=priority,
-            dont_filter=dont_filter,
-            errback=errback,
-            cb_kwargs=cb_kwargs,
-            flags=flags,
-        )
+        return call_grace_instance(
+               Request,
+               url=url,
+               callback=callback,
+               method=method,
+               headers=headers,
+               body=body,
+               cookies=cookies,
+               meta=meta,
+               encoding=encoding,
+               priority=priority,
+               dont_filter=dont_filter,
+               errback=errback,
+               cb_kwargs=cb_kwargs,
+               flags=flags,
+           )
 
     def follow_all(self, urls, callback=None, method='GET', headers=None, body=None,
                    cookies=None, meta=None, encoding='utf-8', priority=0,
-                   dont_filter=False, errback=None, cb_kwargs=None, flags=None) -> tuple:
-        # type: (...) -> Generator[Request, None, None]
-        """
-        .. versionadded:: 2.0
-
-        Return an iterable of :class:`~.Request` instances to follow all links
-        in ``urls``. It accepts the same arguments as ``Request.__init__`` method,
-        but elements of ``urls`` can be relative URLs or :class:`~aioscpy.link.Link` objects,
-        not only absolute URLs.
-
-        :class:`~.TextResponse` provides a :meth:`~.TextResponse.follow_all`
-        method which supports selectors in addition to absolute/relative URLs
-        and Link objects.
-        """
+                   dont_filter=False, errback=None, cb_kwargs=None, flags=None) -> Generator:
         if not hasattr(urls, '__iter__'):
             raise TypeError("'urls' argument must be an iterable")
         return (

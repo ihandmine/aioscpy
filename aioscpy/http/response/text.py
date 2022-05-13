@@ -1,5 +1,4 @@
 from contextlib import suppress
-from typing import Generator
 
 import re
 import parsel
@@ -125,23 +124,6 @@ class TextResponse(Response):
     def follow(self, url, callback=None, method='GET', headers=None, body=None,
                cookies=None, meta=None, encoding=None, priority=0,
                dont_filter=False, errback=None, cb_kwargs=None, flags=None):
-        # type: (...) -> Request
-        """
-        Return a :class:`~.Request` instance to follow a link ``url``.
-        It accepts the same arguments as ``Request.__init__`` method,
-        but ``url`` can be not only an absolute URL, but also
-
-        * a relative URL
-        * a :class:`~aioscpy.link.Link` object, e.g. the result of
-          :ref:`topics-link-extractors`
-        * a :class:`~aioscpy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
-          ``response.css('a.my_link')[0]``
-        * an attribute :class:`~aioscpy.selector.Selector` (not SelectorList), e.g.
-          ``response.css('a::attr(href)')[0]`` or
-          ``response.xpath('//img/@src')[0]``
-
-        See :ref:`response-follow-example` for usage examples.
-        """
         if isinstance(url, parsel.Selector):
             url = _url_from_selector(url)
         elif isinstance(url, parsel.SelectorList):
@@ -167,30 +149,6 @@ class TextResponse(Response):
                    cookies=None, meta=None, encoding=None, priority=0,
                    dont_filter=False, errback=None, cb_kwargs=None, flags=None,
                    css=None, xpath=None):
-        # type: (...) -> Generator[Request, None, None]
-        """
-        A generator that produces :class:`~.Request` instances to follow all
-        links in ``urls``. It accepts the same arguments as the :class:`~.Request`'s
-        ``__init__`` method, except that each ``urls`` element does not need to be
-        an absolute URL, it can be any of the following:
-
-        * a relative URL
-        * a :class:`~aioscpy.link.Link` object, e.g. the result of
-          :ref:`topics-link-extractors`
-        * a :class:`~aioscpy.selector.Selector` object for a ``<link>`` or ``<a>`` element, e.g.
-          ``response.css('a.my_link')[0]``
-        * an attribute :class:`~aioscpy.selector.Selector` (not SelectorList), e.g.
-          ``response.css('a::attr(href)')[0]`` or
-          ``response.xpath('//img/@src')[0]``
-
-        In addition, ``css`` and ``xpath`` arguments are accepted to perform the link extraction
-        within the ``follow_all`` method (only one of ``urls``, ``css`` and ``xpath`` is accepted).
-
-        Note that when passing a ``SelectorList`` as argument for the ``urls`` parameter or
-        using the ``css`` or ``xpath`` parameters, this method will not produce requests for
-        selectors from which links cannot be obtained (for instance, anchor tags without an
-        ``href`` attribute)
-        """
         arguments = [x for x in (urls, css, xpath) if x is not None]
         if len(arguments) != 1:
             raise ValueError(
