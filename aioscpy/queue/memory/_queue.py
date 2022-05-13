@@ -5,8 +5,8 @@ from aioscpy.queue import BaseQueue
 
 class PriorityQueue(BaseQueue):
 
-    def __init__(self, server, serializer="pickle"):
-        super().__init__(server)
+    def __init__(self, server, spider, serializer="pickle"):
+        super().__init__(server, spider)
         self.serializer = self.__compat__[serializer]
 
     def qsize(self) -> int:
@@ -22,9 +22,9 @@ class PriorityQueue(BaseQueue):
         return self._decode_request(_item)
 
 
-def memory_queue() -> PriorityQueue:
+def memory_queue(spider) -> PriorityQueue:
     server = Queue()
-    return PriorityQueue(server=server)
+    return PriorityQueue(server=server, spider=spider)
 
 
 spider_queue = memory_queue
