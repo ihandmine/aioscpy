@@ -1,0 +1,63 @@
+BOT_NAME = 'project_quotes'
+
+SPIDER_MODULES = ['spiders']
+NEWSPIDER_MODULE = 'spiders'
+
+# CONCURRENT_REQUESTS = 16
+# CONCURRENT_REQUESTS_PER_DOMAIN = 8
+# CONCURRENT_REQUESTS_PER_IP = 0
+# RANDOMIZE_DOWNLOAD_DELAY = True
+
+# DOWNLOAD_DELAY = 0
+# DOWNLOAD_TIMEOUT = 20
+# DOWNLOAD_HANDLER = "aioscpy.core.downloader.http.AioHttpDownloadHandler"
+# SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
+# SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
+
+
+# SPIDER_IDLE = False
+
+# :LOG CONFIG
+# LOG_LEVEL = "DEBUG"
+# LOG_FILE = False
+# LOG_FILENAME = f"{BOT_NAME}.log"
+# LOG_ENCODING = "utf-8"
+# LOG_ROTATION = "1 week"
+# LOG_RETENTION = "30 days"
+
+# message config
+# RABBITMQ_TCP = {
+#     "host": "172.16.8.147",
+#     # "port": 5672,
+#     # "username": "admin",
+#     # "password": "admin",
+#     # "key": "message:queue",
+#     # "max_priority": 100
+# }
+# QUEUE_KEY = '%(spider)s:requests'
+
+# REDIS_TCP = {
+#     "host": "172.16.7.172",
+#     "port": 6379,
+#     "password": "123456",
+#     "db": 15
+# }
+# REDIS_URI = "redis://:123456@172.16.7.172:6379/1"
+
+
+# DOWNLOADER_STATS = True
+
+# LOGSTATS_INTERVAL = 60.0
+# STATS_CLASS = 'aioscpy.libs.statscollectors.MemoryStatsCollector'
+# STATS_DUMP = True
+
+# DOWNLOADER_MIDDLEWARES = {
+#     'project_quotes.middlewares.ProjectQuotesDownloaderMiddleware': 543,
+# }
+
+# EXTENSIONS = {
+# }
+
+# ITEM_PIPELINES = {
+#     'project_quotes.pipelines.ProjectQuotesPipeline': 300,
+# }
