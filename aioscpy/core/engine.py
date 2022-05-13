@@ -18,9 +18,18 @@ class Slot(object):
         self.crawler = crawler
         self.heartbeat = None
         self.closing_wait = None
+        self.scrape = set()
 
     def add_request(self, request):
         self.inprogress.add(request)
+
+    def scrape_buffer_space(self, result, emit=None):
+        if isinstance(result, dict):
+            result = str(result)
+        if emit is None:
+            self.scrape.add(result)
+        else:
+            self.scrape.remove(result)
 
     def remove_request(self, request):
         self.inprogress.remove(request)
@@ -117,7 +126,6 @@ class ExecutionEngine(object):
                 not self.running
                 or self.slot.closing
                 or self.downloader.needs_backout()
-                # or self.scraper.slot.needs_backout()
         )
 
     async def _handle_downloader_output(self, result, request, spider):
@@ -138,6 +146,7 @@ class ExecutionEngine(object):
             asyncio.create_task(self._next_request(self.spider))
         response = await self.call_spider(result, request, spider)
         await self.call_helper(self.handle_spider_output, response, request, result, spider)
+        asyncio.create_task(self._next_request(self.spider))
 
     async def call_spider(self, result, request, spider):
         if isinstance(result, self.di.get('response')):
@@ -147,7 +156,6 @@ class ExecutionEngine(object):
         else:
             if request.errback is None:
                 raise result
-            # 下载中间件或下载结果出现错误,回调request中的errback函数
             return await self.call_helper(request.errback, result)
 
     async def handle_spider_output(self, result, request, response, spider):
@@ -162,14 +170,10 @@ class ExecutionEngine(object):
             except Exception as e:
                 raise Exception(f"handle spider output error, {e}")
             else:
+                self.slot.scrape_buffer_space(res)
                 await self._process_spidermw_output(res, request, response, spider)
-                # item = await self.itemproc.process_item(res, spider)
-                # process_item_method = getattr(spider, 'process_item', None)
-                # if process_item_method:
-                #     await self.call_helper(process_item_method, item)
 
     async def _process_spidermw_output(self, output, request, response, spider):
-        # async with self.concurrent_items_semaphore:
         if isinstance(output, self.di.get('request')):
             await self.crawler.engine.crawl(request=output, spider=spider)
         elif isinstance(output, dict):
@@ -187,6 +191,7 @@ class ExecutionEngine(object):
                 {'request': request, 'typename': typename},
                 extra={'spider': spider},
             )
+        self.slot.scrape_buffer_space(output, emit=True)
 
     async def _itemproc_finished(self, output, item, response, spider):
         if isinstance(output, (Exception, BaseException)):
@@ -215,9 +220,9 @@ class ExecutionEngine(object):
                 spider=spider)
 
     async def spider_is_idle(self, spider):
-        # if not self.scraper.slot.is_idle():
-        #     # scraper is not idle
-        #     return False
+        if self.slot.scrape:
+            # scrape has pending task
+            return False
 
         if self.downloader.active:
             # downloader has pending requests
@@ -318,8 +323,8 @@ class ExecutionEngine(object):
         res = await self.signals.send_catch_log(signals.spider_idle, spider=spider, dont_log=self.di.get("exceptions").DontCloseSpider)
         if any(isinstance(x, self.di.get("exceptions").DontCloseSpider) for _, x in res):
             return
-        # if await self.spider_is_idle(spider):
-        await self.close_spider(spider, reason='finished')
+        if await self.spider_is_idle(spider):
+            await self.close_spider(spider, reason='finished')
 
     async def heart_beat(self, delay, spider, slot):
         while not slot.closing:
