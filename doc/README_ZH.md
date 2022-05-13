@@ -1,6 +1,6 @@
 
 
-![aioscpy](./doc/images/aioscpy.png)
+![aioscpy](./images/aioscpy.png)
 
 ### Aioscpy
 
@@ -44,7 +44,7 @@ cd project_quotes
 aioscpy genspider quotes 
 ```
 
-![tree](./doc/images/tree.png)
+![tree](./images/tree.png)
 
 quotes.py:
 
@@ -136,7 +136,7 @@ aioscpy crawl quotes
 aioscpy runspider quotes.py
 ```
 
-![run](./doc/images/run.png)
+![run](./images/run.png)
 
 start.py:
 
