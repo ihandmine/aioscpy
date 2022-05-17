@@ -59,17 +59,16 @@ class Redis:
 
 
 def priority_queue(key: str, redis_tcp: dict) -> PriorityQueue:
+    """
+    def run():
+        queue = redis_client('message:queue')
+        # queue.push({"url": "https://www.baidu.com/?kw=1", "task_id": '123'})
+        print(queue.pop())
+
+    run()
+    """
     server = Redis(**redis_tcp).get_redis_pool
     return PriorityQueue(server=server, key=key)
 
 
 spider_priority_queue = priority_queue
-
-"""
-def run():
-    queue = redis_client('message:queue')
-    # queue.push({"url": "https://www.baidu.com/?kw=1", "task_id": '123'})
-    print(queue.pop())
-
-run()
-"""

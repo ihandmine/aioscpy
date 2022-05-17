@@ -23,23 +23,20 @@ class PriorityQueue(BaseQueue):
 
 
 def memory_queue(spider) -> PriorityQueue:
+    """
+    async def run():
+        queue = memery_queue('message:queue')
+        await queue.push({"url": "https://www.baidu.com/?kw=1", "task_id": '123'})
+        print(await queue.pop())
+
+
+    if __name__ == "__main__":
+        import asyncio
+        asyncio.run(run())
+
+    """
     server = Queue()
     return PriorityQueue(server=server, spider=spider)
 
 
 spider_queue = memory_queue
-
-
-"""
-async def run():
-    queue = memery_queue('message:queue')
-    await queue.push({"url": "https://www.baidu.com/?kw=1", "task_id": '123'})
-    print(await queue.pop())
-
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(run())
-
-"""
-
