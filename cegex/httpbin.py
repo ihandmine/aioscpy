@@ -18,3 +18,8 @@ class HttpBinSpider(Spider):
     async def process_item(self, item):
         pass
         # self.logger.info(item)
+
+
+if __name__ == '__main__':
+    q = HttpBinSpider()
+    q.start()
