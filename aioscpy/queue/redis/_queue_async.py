@@ -1,4 +1,5 @@
-from aioredis import Redis, BlockingConnectionPool
+from redis.asyncio import Redis, BlockingConnectionPool
+
 
 from aioscpy.queue import BaseQueue
 
