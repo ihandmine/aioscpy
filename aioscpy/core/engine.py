@@ -159,6 +159,7 @@ class ExecutionEngine(object):
             return await self.call_helper(request.errback, result)
 
     async def handle_spider_output(self, result, request, response, spider):
+        slot = self.slot
         if not result:
             return
 
@@ -170,10 +171,10 @@ class ExecutionEngine(object):
             except Exception as e:
                 raise Exception(f"handle spider output error, {e}")
             else:
-                self.slot.scrape_buffer_space(res)
-                await self._process_spidermw_output(res, request, response, spider)
+                slot.scrape_buffer_space(res)
+                await self._process_spidermw_output(res, request, response, spider, slot)
 
-    async def _process_spidermw_output(self, output, request, response, spider):
+    async def _process_spidermw_output(self, output, request, response, spider, slot):
         if isinstance(output, self.di.get('request')):
             await self.crawler.engine.crawl(request=output, spider=spider)
         elif isinstance(output, dict):
@@ -191,7 +192,7 @@ class ExecutionEngine(object):
                 {'request': request, 'typename': typename},
                 extra={'spider': spider},
             )
-        self.slot.scrape_buffer_space(output, emit=True)
+        slot.scrape_buffer_space(output, emit=True)
 
     async def _itemproc_finished(self, output, item, response, spider):
         if isinstance(output, (Exception, BaseException)):
