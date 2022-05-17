@@ -67,6 +67,7 @@ setup(
         "w3lib",
         "parsel",
         "PyDispatcher"
+        "redis"
     ],
     description=DESCRIPTION,
     long_description=long_description,
