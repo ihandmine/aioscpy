@@ -19,6 +19,7 @@ class Slot(object):
         self.heartbeat = None
         self.closing_wait = None
         self.scrape = set()
+        self.closing_lock = None
 
     def add_request(self, request):
         self.inprogress.add(request)
@@ -181,7 +182,7 @@ class ExecutionEngine(object):
             item = await self.itemproc.process_item(output, spider)
             process_item_method = getattr(spider, 'process_item', None)
             if process_item_method:
-                await self.call_helper(process_item_method, item)
+                item = await self.call_helper(process_item_method, item)
             await self._itemproc_finished(output, item, response, spider)
         elif output is None:
             pass
@@ -271,9 +272,9 @@ class ExecutionEngine(object):
         await self.call_helper(self.scheduler.open, start_requests)
         # await self.call_helper(self.scraper.open_spider, spider)
         # await self.call_helper(self.crawler.stats.open_spider, spider)
+        self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
         await self.signals.send_catch_log_coroutine(signals.spider_opened, spider=spider)
         await self._next_request(spider)
-        self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
 
     async def _close_all_spiders(self):
         dfds = [self.close_spider(s, reason='shutdown') for s in self.open_spiders]
@@ -282,8 +283,10 @@ class ExecutionEngine(object):
     async def close_spider(self, spider, reason='cancelled'):
         """Close (cancel) spider and clear all its outstanding requests"""
         slot = self.slot
-        if slot and slot.closing:
+        if slot and slot.closing or slot.closing_lock:
             return slot.closing
+
+        slot.closing_lock = True
 
         self.logger.info("Closing spider({name}) ({reason})",
                     **{'reason': reason, 'name': spider.name},
