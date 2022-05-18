@@ -66,7 +66,7 @@ setup(
         "anti-header",
         "w3lib",
         "parsel",
-        "PyDispatcher"
+        "PyDispatcher",
         "redis"
     ],
     description=DESCRIPTION,
