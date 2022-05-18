@@ -14,7 +14,7 @@ AUTHOR = "handmine"
 REQUIRES_PYTHON = ">=3.7.0"
 
 here = os.path.abspath(os.path.dirname(__file__))
-with open(f"{here}/README.md") as f:
+with open(f"{here}/README.md", encoding='utf-8') as f:
     long_description = f.read()
 
 with open(join(dirname(__file__), 'aioscpy/VERSION'), 'rb') as f:
