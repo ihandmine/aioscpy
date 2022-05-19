@@ -47,6 +47,7 @@ DI_CREATE_CLS = {
     'spider': 'aioscpy.spider.Spider',
     'downloader_handler': f'{DOWNLOAD_HANDLER}',
     'stats': 'aioscpy.libs.statscollectors.MemoryStatsCollector',
+    'scraper': 'aioscpy.core.scraper.Scraper'
 }
 
 # message config
