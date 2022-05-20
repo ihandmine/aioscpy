@@ -3,6 +3,7 @@ import ssl
 import aiohttp
 
 from anti_header import Headers
+from anti_useragent.utils.cipers import generate_cipher
 
 
 class AioHttpDownloadHandler(object):
@@ -41,11 +42,11 @@ class AioHttpDownloadHandler(object):
             headers = headers.to_unicode_dict()
         kwargs['headers'] = headers
 
-        ssl_ciphers = request.meta.get('TLS_CIPHERS')
+        ssl_ciphers = request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS')
         if ssl_ciphers:
             context = ssl.create_default_context()
             context.set_ciphers(ssl_ciphers)
-            kwargs['ssl'] = context
+            kwargs['ssl'] = generate_cipher()
 
         proxy = request.meta.get("proxy")
         if proxy:
