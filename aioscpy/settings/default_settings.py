@@ -90,3 +90,5 @@ STATS_CLASS = 'aioscpy.libs.statscollectors.MemoryStatsCollector'
 STATS_DUMP = True
 SCRAPER_SLOT_MAX_ACTIVE_SIZE = 5000000
 
+TLS_CIPHERS = False
+
