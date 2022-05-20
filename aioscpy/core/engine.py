@@ -61,7 +61,6 @@ class ExecutionEngine(object):
         self.signals = crawler.signals
         self.logformatter = crawler.load("log_formatter")
         self.scheduler = crawler.load("scheduler")
-        # self.itemproc = crawler.load("item_processor")
         self.downloader = crawler.load("downloader")
         self.scraper = call_grace_instance("scraper", crawler, self)
         self.call_helper = self.di.get("tools").call_helper
@@ -81,10 +80,8 @@ class ExecutionEngine(object):
     async def close(self):
 
         if self.running:
-            # Will also close spiders and downloader
             await self.stop()
         elif self.open_spiders:
-            # Will also close downloader
             await self._close_all_spiders()
         else:
             self.downloader.close()
@@ -147,13 +144,10 @@ class ExecutionEngine(object):
         finally:
             self.slot.remove_request(request)
             asyncio.create_task(self._next_request(self.spider))
-        # response = await self.call_spider(result, request, spider)
-        # await self.call_helper(self.handle_spider_output, response, request, result, spider)
-        # asyncio.create_task(self._next_request(self.spider))
         await self.scraper.enqueue_scrape(result, request, spider)
 
     async def spider_is_idle(self, spider):
-        if not self.scraper.slot.is_idle():
+        if self.scraper.slot.is_idle():
             # scraper is not idle
             return False
 
@@ -180,11 +174,9 @@ class ExecutionEngine(object):
         return (self.spider,) if self.spider else set()
 
     def has_capacity(self):
-        """Does the engine have capacity to handle more spiders"""
         return not bool(self.slot)
 
     async def crawl(self, request, spider):  # 将网址 请求加入队列
-        # await self.call_helper(self.slot.scheduler.enqueue_request, request)
         if spider not in self.open_spiders:
             raise RuntimeError("Spider %r not opened when crawling: %s" % (spider.name, request))
 
@@ -197,15 +189,14 @@ class ExecutionEngine(object):
             raise RuntimeError("No free spider slot when opening %r" % spider.name)
         self.logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
-        # scheduler = await self.call_helper(self.scheduler_cls.from_crawler, self.crawler)
         self.slot = Slot(start_requests, close_if_idle, self.scheduler, self.crawler)
         self.spider = spider
         await self.call_helper(self.scheduler.open, start_requests)
         await self.call_helper(self.scraper.open_spider, spider)
-        # await self.call_helper(self.crawler.stats.open_spider, spider)
+        await self.call_helper(self.crawler.stats.open_spider, spider)
         await self.signals.send_catch_log_coroutine(signals.spider_opened, spider=spider)
         await self._next_request(spider)
-        self.slot.heartbeat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
+        self.slot.heartbeat = asyncio.create_task(self.heart_beat(0.2, spider, self.slot))
 
     async def _close_all_spiders(self):
         dfds = [self.close_spider(s, reason='shutdown') for s in self.open_spiders]
