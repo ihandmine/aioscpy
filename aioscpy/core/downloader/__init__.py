@@ -136,6 +136,7 @@ class Downloader(object):
         except (Exception, BaseException, asyncio.TimeoutError) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
             self.logger.error(type(exc).__name__)
+            self.logger.exception(exc)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
                 response = await self.call_helper(process_exception_method, request, exc)

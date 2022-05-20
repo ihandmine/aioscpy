@@ -45,8 +45,8 @@ class AioHttpDownloadHandler(object):
         ssl_ciphers = request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS')
         if ssl_ciphers:
             context = ssl.create_default_context()
-            context.set_ciphers(ssl_ciphers)
-            kwargs['ssl'] = generate_cipher()
+            context.set_ciphers(generate_cipher())
+            kwargs['ssl'] = context
 
         proxy = request.meta.get("proxy")
         if proxy:

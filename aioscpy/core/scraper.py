@@ -77,7 +77,7 @@ class Scraper:
         try:
             await self._scrape_next(spider, slot)
         except (Exception, BaseException) as e:
-            self.logger.error('Scraper bug processing {request}',
+            self.logger.exception('Scraper bug processing {request}',
                          **{'request': request},
                          exc_info=response,
                          extra={'spider': spider})
