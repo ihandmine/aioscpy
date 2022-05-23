@@ -125,6 +125,7 @@ class Scraper:
         logkws = self.logformatter.spider_error(exc, request, response, spider)
         level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
         self.logger.log(level, message, **kwargs)
+        self.logger.exception(exc)
         await self.signals.send_catch_log(
             signal=signals.spider_error,
             failure=exc, response=response,
@@ -176,6 +177,7 @@ class Scraper:
             logkws = self.logformatter.download_error(download_exception, request, spider)
             level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
             self.logger.log(level, message, **kwargs)
+            self.logger.exception(exc)
 
         if spider_exception is not download_exception:
             raise spider_exception
@@ -188,6 +190,7 @@ class Scraper:
                 if logkws is not None:
                     level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
                     self.logger.log(level, message, **kwargs)
+                    self.logger.exception(output)
                 return await self.signals.send_catch_log_coroutine(
                     signal=signals.item_dropped, item=item, response=response,
                     spider=spider, exception=output)
@@ -195,6 +198,7 @@ class Scraper:
                 logkws = self.logformatter.item_error(item, output, response, spider)
                 level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
                 self.logger.log(level, message, **kwargs)
+                self.logger.exception(output)
                 return await self.signals.send_catch_log_coroutine(
                     signal=signals.item_error, item=item, response=response,
                     spider=spider, failure=output)
