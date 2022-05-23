@@ -230,6 +230,9 @@ def init_env(project='default', set_syspath=True):
     cfg = get_config()
     if cfg.has_option('settings', project):
         os.environ['SETTINGS_MODULE'] = cfg.get('settings', project)
+    if cfg.has_option('package_env', "path"):
+        path = cfg.get('package_env', 'path')
+        sys.path.append(path)
     closest = closest_aioscpy_cfg()
     if closest:
         projdir = os.path.dirname(closest)
