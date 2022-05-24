@@ -177,7 +177,7 @@ class Scraper:
             logkws = self.logformatter.download_error(download_exception, request, spider)
             level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
             self.logger.log(level, message, **kwargs)
-            self.logger.exception(exc)
+            self.logger.exception(download_exception)
 
         if spider_exception is not download_exception:
             raise spider_exception
