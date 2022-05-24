@@ -135,8 +135,8 @@ class Downloader(object):
                 response = await self.handlers.download_request(request, spider)
         except (Exception, BaseException, asyncio.TimeoutError) as exc:
             response = await self.middleware.process_exception(spider, request, exc)
-            self.logger.error(type(exc).__name__)
-            self.logger.exception(exc)
+            if type(exc).__name__ not in ['CancelledError']:
+                self.logger.error(type(exc).__name__)
             process_exception_method = getattr(spider, "process_exception", None)
             if process_exception_method:
                 response = await self.call_helper(process_exception_method, request, exc)
