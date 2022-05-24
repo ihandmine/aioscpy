@@ -19,6 +19,9 @@ class BaiduSpider(Spider):
     async def process_response(self, request, response):
         return response
 
+    async def process_exception(self, request, exc):
+        raise exc
+
     async def parse(self, response):
         item = {
             'hot': '\n'.join(response.xpath('//span[@class="title-content-title"]/text()').extract()),
