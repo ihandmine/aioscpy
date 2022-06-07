@@ -2,6 +2,7 @@ from typing import Generator
 from urllib.parse import urljoin
 
 from aioscpy.http.request import Request
+from aioscpy.http.request.form import FormRequest
 from aioscpy import call_grace_instance
 from aioscpy.utils.tools import obsolete_setter
 
@@ -110,14 +111,18 @@ class Response(object):
         # raise NotSupported("Response content isn't text")
         raise NotImplementedError
 
-    def follow(self, url, callback=None, method='GET', headers=None, body=None,
+    def follow(self, url, callback=None, method='GET', formdata=None, headers=None, body=None,
                cookies=None, meta=None, encoding='utf-8', priority=0,
-               dont_filter=False, errback=None, cb_kwargs=None, flags=None) -> Request:
+               dont_filter=False, errback=None, cb_kwargs=None, flags=None, **kwargs) -> Request:
 
         url = self.urljoin(url)
+        method_request = Request
+        if method == "POST":
+            method_request = FormRequest
+            kwargs['formdata'] = formdata
 
         return call_grace_instance(
-               Request,
+               method_request,
                url=url,
                callback=callback,
                method=method,
@@ -131,6 +136,7 @@ class Response(object):
                errback=errback,
                cb_kwargs=cb_kwargs,
                flags=flags,
+               **kwargs
            )
 
     def follow_all(self, urls, callback=None, method='GET', headers=None, body=None,
