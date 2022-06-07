@@ -252,7 +252,7 @@ def get_project_settings():
     if settings_module_path:
         settings.setmodule(settings_module_path, priority='project')
 
-    aioscpy_envvars = {k[7:]: v for k, v in os.environ.items() if
+    aioscpy_envvars = {k[8:]: v for k, v in os.environ.items() if
                       k.startswith('AIOSCPY_')}
     valid_envvars = {
         'CHECK',
