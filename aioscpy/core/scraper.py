@@ -77,8 +77,8 @@ class Scraper:
         try:
             await self._scrape_next(spider, slot)
         except (Exception, BaseException) as e:
-            self.logger.exception('Scraper bug processing {request}',
-                         **{'request': request},
+            self.logger.error('Scraper bug processing {request}, {exc}',
+                         **{'request': request, 'exc': e},
                          exc_info=response,
                          extra={'spider': spider})
         finally:
@@ -125,8 +125,9 @@ class Scraper:
         logkws = self.logformatter.spider_error(exc, request, response, spider)
         level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
         if type(exc).__name__ not in ['CancelledError']:
-            self.logger.log(level, message, **kwargs)
-            self.logger.exception(exc)
+            # self.logger.log(level, message, exception=True, depth=2, **kwargs)
+            self.logger.opt(exception=True, depth=2).error(level, message,  **kwargs)
+            # self.logger.exception(exc)
         await self.signals.send_catch_log(
             signal=signals.spider_error,
             failure=exc, response=response,
