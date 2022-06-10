@@ -9,7 +9,8 @@ CONCURRENT_ITEMS = 16
 
 DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 20
-DOWNLOAD_HANDLER = "aioscpy.core.downloader.http.AioHttpDownloadHandler"
+# DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.aiohttp.AioHttpDownloadHandler"
+DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.httpx.HttpxDownloadHandler"
 # SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
 SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
 
