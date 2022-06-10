@@ -9,7 +9,7 @@ from parsel import Selector
 
 from aioscpy.http import Request
 from aioscpy.http.response import Response
-from aioscpy.utils.tools import to_unicode, memoizemethod_noargs
+from aioscpy.utils.tools import to_unicode, memoizemethod_noargs, call_helper
 
 
 class TextResponse(Response):
@@ -29,7 +29,7 @@ class TextResponse(Response):
         cookies = {}
         if cookies_raw is None:
             return cookies
-        cookies_str = cookies_raw.output()
+        cookies_str = str(cookies_raw)
         for cookie in re.findall(r'Set-Cookie: (.*?)=(.*?); Domain', cookies_str, re.S):
             cookies[cookie[0]] = cookie[1]
         return cookies
@@ -79,7 +79,7 @@ class TextResponse(Response):
 
     @property
     async def json(self):
-        return await self._response.json()
+        return await call_helper(self._response.json)
 
     @memoizemethod_noargs
     def _headers_encoding(self):
