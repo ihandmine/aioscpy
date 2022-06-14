@@ -86,7 +86,8 @@ class DependencyInjection(object):
                     module = module.load_module(package_name)
                     class_name = module.__dir__()[-1]
                     class_object = getattr(module, class_name)
-                    _class_objects[class_object.name] = class_object
+                    if hasattr(class_object, "name"):
+                        _class_objects[class_object.name] = class_object
 
         load_all_spider_inner(dirname)
         return _class_objects
