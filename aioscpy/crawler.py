@@ -104,7 +104,7 @@ class CrawlerProcess(object):
         if isinstance(crawler_or_spidercls, Crawler):
             return crawler_or_spidercls
         if isinstance(crawler_or_spidercls, str):
-            crawler_or_spidercls = self.load_spider(spider_key=crawler_or_spidercls)
+            crawler_or_spidercls = self.load_spider(spider_key=crawler_or_spidercls, **kwargs)
         settings = kwargs.pop('settings', self.settings)
         return call_grace_instance("crawler", crawler_or_spidercls, *args, settings=settings, **kwargs)
 
