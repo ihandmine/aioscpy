@@ -47,11 +47,11 @@ class HttpxDownloadHandler(object):
         if ssl_ciphers:
             context = ssl.create_default_context()
             context.set_ciphers(generate_cipher())
-            kwargs['verify'] = context
+            self.httpx_client_session_args['verify'] = context
 
         proxy = request.meta.get("proxy")
         if proxy:
-            kwargs["proxies"] = proxy
+            self.httpx_client_session_args['proxies'] = proxy
             self.logger.debug(f"use {proxy} crawling: {request.url}")
 
         async with httpx.AsyncClient(**self.httpx_client_session_args) as session:
