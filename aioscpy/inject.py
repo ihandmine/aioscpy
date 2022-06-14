@@ -4,7 +4,7 @@ from importlib import import_module
 from pkgutil import iter_modules
 
 from aioscpy.settings import Settings
-from aioscpy.utils.tools import singleton
+from aioscpy.utils.tools import singleton, get_project_settings
 
 
 @singleton
@@ -167,7 +167,7 @@ class DependencyInjectionCls(DependencyInjection):
 
     def __init__(self):
         self.c_slot = CSlot()
-        self.settings = Settings()
+        self.settings = get_project_settings()
 
     def inject(self):
         if self.c_slot.empty():
