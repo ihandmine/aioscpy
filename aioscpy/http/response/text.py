@@ -123,7 +123,7 @@ class TextResponse(Response):
 
     def follow(self, url, callback=None, method='GET', headers=None, body=None,
                cookies=None, meta=None, encoding=None, priority=0,
-               dont_filter=False, errback=None, cb_kwargs=None, flags=None):
+               dont_filter=False, errback=None, cb_kwargs=None, flags=None, **kwargs):
         if isinstance(url, parsel.Selector):
             url = _url_from_selector(url)
         elif isinstance(url, parsel.SelectorList):
@@ -143,6 +143,7 @@ class TextResponse(Response):
             errback=errback,
             cb_kwargs=cb_kwargs,
             flags=flags,
+            **kwargs
         )
 
     def follow_all(self, urls=None, callback=None, method='GET', headers=None, body=None,

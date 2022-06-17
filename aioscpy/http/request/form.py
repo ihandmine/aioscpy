@@ -19,7 +19,7 @@ class FormRequest(Request):
             querystr = _urlencode(items, self.encoding)
             if self.method == 'POST':
                 self.headers.setdefault(
-                    b'Content-Type', b'application/x-www-form-urlencoded')
+                    b'Content-Type', [b'application/x-www-form-urlencoded'])
                 self._set_body(querystr)
             else:
                 self._set_url(
