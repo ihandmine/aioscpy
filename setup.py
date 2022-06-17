@@ -19,6 +19,15 @@ with open(f"{here}/README.md", encoding='utf-8') as f:
 
 with open(join(dirname(__file__), 'aioscpy/VERSION'), 'rb') as f:
     VERSION = f.read().decode('ascii').strip()
+with open(join(dirname(__file__), 'aioscpy/VERSION'), 'w') as f:
+    maxv, midv, minv = [int(v) for v in VERSION.split('.')]
+    if minv <= 24:
+        minv += 1
+    else:
+        midv += 1
+        minv = 0
+    VERSION = '.'.join([str(v) for v in [maxv, midv, minv]])
+    f.write(VERSION + '\n')
 
 
 class UploadCommand(Command):
