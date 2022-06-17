@@ -31,7 +31,10 @@ class Scheduler(object):
         async for request in start_requests:
             await self.enqueue_request(request)
 
-    async def close(self):
+    async def close(self, slot):
+        if slot.inprogress:
+            for request in slot.inprogress:
+                await self.enqueue_request(request)
         await self.queue.close()
 
     def __len__(self):

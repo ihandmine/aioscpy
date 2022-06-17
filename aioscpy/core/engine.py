@@ -236,7 +236,7 @@ class ExecutionEngine(object):
 
         await close_handler(self.scraper.close_spider, spider, errmsg='Scraper close failure')
 
-        await close_handler(slot.scheduler.close, errmsg='Scheduler close failure')
+        await close_handler(slot.scheduler.close, slot, errmsg='Scheduler close failure')
 
         await close_handler(self.signals.send_catch_log_coroutine, signal=signals.spider_closed, spider=spider,
                             reason=reason, errmsg='Error while sending spider_close signal')
