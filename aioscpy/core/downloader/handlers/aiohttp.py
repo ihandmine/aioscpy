@@ -14,6 +14,7 @@ class AioHttpDownloadHandler(object):
         self.crawler = crawler
         self.aiohttp_client_session_args = settings.get('AIOHTTP_CLIENT_SESSION_ARGS', {})
         self.verify_ssl = self.settings.get("VERIFY_SSL")
+        self.context = ssl.create_default_context()
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -44,9 +45,8 @@ class AioHttpDownloadHandler(object):
 
         ssl_ciphers = request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS')
         if ssl_ciphers:
-            context = ssl.create_default_context()
-            context.set_ciphers(generate_cipher())
-            kwargs['ssl'] = context
+            self.context.set_ciphers(generate_cipher())
+            kwargs['ssl'] = self.context
 
         proxy = request.meta.get("proxy")
         if proxy:
