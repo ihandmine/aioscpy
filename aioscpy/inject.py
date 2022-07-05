@@ -76,7 +76,7 @@ class DependencyInjection(object):
     @staticmethod
     def load_all_spider(dirname):
         _class_objects = {}
-
+    
         def load_all_spider_inner(dirname):
             for importer, package_name, ispkg in iter_modules([dirname]):
                 if ispkg:
@@ -84,10 +84,15 @@ class DependencyInjection(object):
                 else:
                     module = importer.find_module(package_name)
                     module = module.load_module(package_name)
-                    class_name = module.__dir__()[-1]
-                    class_object = getattr(module, class_name)
-                    if hasattr(class_object, "name"):
-                        _class_objects[class_object.name] = class_object
+                    for cls_name in module.__dir__():
+                        if cls_name == "__spiders__":
+                            for co in class_object:
+                                _class_objects[co.name] = co
+                        if not cls_name.startswith('__'):
+                            class_object = getattr(module, cls_name)
+                            if hasattr(class_object, "name") and getattr(class_object, "name"):
+                                _class_objects[class_object.name] = class_object
+
 
         load_all_spider_inner(dirname)
         return _class_objects
