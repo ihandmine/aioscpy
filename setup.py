@@ -18,16 +18,15 @@ with open(f"{here}/README.md", encoding='utf-8') as f:
     long_description = f.read()
 
 with open(join(dirname(__file__), 'aioscpy/VERSION'), 'rb') as f:
-    VERSION = f.read().decode('ascii').strip()
-with open(join(dirname(__file__), 'aioscpy/VERSION'), 'w') as f:
-    maxv, midv, minv = [int(v) for v in VERSION.split('.')]
+    old_version = f.read().decode('ascii').strip()
+    maxv, midv, minv = [int(v) for v in old_version.split('.')]
     if minv <= 24:
         minv += 1
     else:
         midv += 1
         minv = 0
     VERSION = '.'.join([str(v) for v in [maxv, midv, minv]])
-    f.write(VERSION + '\n')
+    print(f'old version: {old_version}, new version: {VERSION}')
 
 
 class UploadCommand(Command):
@@ -60,6 +59,8 @@ class UploadCommand(Command):
         self.status("Uploading the package to PyPI via Twine...")
         os.system("twine upload dist/*")
 
+        with open(join(dirname(__file__), 'aioscpy/VERSION'), 'w') as f:
+            f.write(VERSION + '\n')
         sys.exit()
 
 
