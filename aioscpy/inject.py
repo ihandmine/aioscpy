@@ -86,6 +86,7 @@ class DependencyInjection(object):
                     module = module.load_module(package_name)
                     for cls_name in module.__dir__():
                         if cls_name == "__spiders__":
+                            class_object = getattr(module, cls_name)
                             for co in class_object:
                                 _class_objects[co.name] = co
                         if not cls_name.startswith('__'):
