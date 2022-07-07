@@ -116,6 +116,7 @@ class Downloader(object):
         while slot.queue and slot.free_transfer_slots() > 0:
             slot.lastseen = now
             request, _handle_downloader_output = slot.queue.popleft()
+            slot.transferring.add(request)
             await self.call_create_task(self._download, slot, request, spider, _handle_downloader_output)
             # prevent burst if inter-request delays were configured
             if delay:
@@ -123,7 +124,6 @@ class Downloader(object):
                 break
 
     async def _download(self, slot, request, spider, _handle_downloader_output):
-        slot.transferring.add(request)
         response = None
         response = await self.middleware.process_request(spider, request)
         process_request_method = getattr(spider, "process_request", None)
