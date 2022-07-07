@@ -16,6 +16,14 @@ class PriorityQueue(BaseQueue):
         score = -request.get('priority', 1)
         await self.server.zadd(self.key, {data: score})
 
+    async def mpush(self, requests: list):
+        async with self.server.pipeline() as pipe:
+            for request in requests:
+                data = self._encode_request(request)
+                score = -request.get('priority', 1)
+                pipe.zadd(self.key, {data: score})
+            await pipe.execute()
+
     async def pop(self, timeout: int = 0) -> dict:
         async with self.server.pipeline(transaction=True) as pipe:
             results, count = await (
