@@ -86,21 +86,17 @@ class ExecutionEngine(object):
         else:
             self.downloader.close()
 
-    async def _next_request(self, spider):
+    async def _next_request(self, spider) -> None:
         slot = self.slot
         if not slot:
             return
 
-        while self.lock and not self._needs_backout(spider) and self.lock:
-            self.lock = False
-            try:
-                if not await self.call_helper(slot.scheduler.has_pending_requests):
-                    break
-                request = await self.call_helper(slot.scheduler.next_request)
-                slot.add_request(request)
-                await self.downloader.fetch(request, spider, self._handle_downloader_output)
-            finally:
-                self.lock = True
+        while not self._needs_backout(spider):
+            if not await self.call_helper(slot.scheduler.has_pending_requests):
+                break
+            request = await self.call_helper(slot.scheduler.next_request)
+            slot.add_request(request)
+            await self.downloader.fetch(request, spider, self._handle_downloader_output)
 
         if slot.start_requests and not self._needs_backout(spider) and not slot.doing_start_requests:
             slot.doing_start_requests = True
@@ -245,9 +241,9 @@ class ExecutionEngine(object):
 
         self.logger.info("Spider({name}) closed ({reason})", **{'reason': reason, "name": spider.name}, extra={'spider': spider})
 
-        await close_handler(setattr, self, 'slot', None, errmsg='Error while unassigning slot')
+        # await close_handler(setattr, self, 'slot', None, errmsg='Error while unassigning slot')
 
-        await close_handler(setattr, self, 'spider', None, errmsg='Error while unassigning spider')
+        # await close_handler(setattr, self, 'spider', None, errmsg='Error while unassigning spider')
 
         await self._spider_closed_callback()
 
