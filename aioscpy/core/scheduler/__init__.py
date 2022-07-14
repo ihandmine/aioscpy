@@ -23,7 +23,8 @@ class Scheduler(object):
         request = await self.queue.pop()
         if request and self.stats:
             self.stats.inc_value('scheduler/dequeued/redis', spider=self.spider)
-        return request
+        if request:
+            return request
 
     async def open(self, start_requests):
         if asyncio.iscoroutine(self.queue):
