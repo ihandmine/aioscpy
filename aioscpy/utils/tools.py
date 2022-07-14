@@ -272,7 +272,6 @@ def get_project_settings():
     settings.setdict(aioscpy_envvars, priority='project')
     settings['DI_CONFIG']['scheduler'] = settings['SCHEDULER']
     settings['DI_CREATE_CLS']['downloader_handler'] = settings['DOWNLOAD_HANDLER']
-    settings['LOG_FILENAME'] = f"{settings['BOT_NAME']}.log"
     return settings
 
 
