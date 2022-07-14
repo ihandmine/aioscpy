@@ -12,6 +12,7 @@ class LogStats:
         self.interval = interval
         self.multiplier = 60.0 / self.interval
         self.task = None
+        self._close_stats = 0
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -28,6 +29,12 @@ class LogStats:
         self.itemsprev = 0
         self.task = asyncio.create_task(self.log(spider))
 
+    def cancel_task(self, tag):
+        if tag < 3:
+            self._close_stats += 1
+        else:
+            self.task.cancel()
+
     async def log(self, spider):
         await asyncio.sleep(self.interval)
         items = self.stats.get_value('item_scraped_count', 0)
@@ -42,6 +49,7 @@ class LogStats:
                     'items': items, 'itemrate': irate}
         self.logger.info(msg, **log_args, extra={'spider': spider})
         self.task = asyncio.create_task(self.log(spider))
+        self.cancel_task(pages)
 
     def spider_closed(self, spider, reason):
         if self.task and not self.task.done():
