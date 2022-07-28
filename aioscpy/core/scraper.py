@@ -1,4 +1,5 @@
 import asyncio
+import gc
 from collections import deque
 
 from aioscpy import signals
@@ -125,8 +126,7 @@ class Scraper:
         logkws = self.logformatter.spider_error(exc, request, response, spider)
         level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
         if type(exc).__name__ not in ['CancelledError']:
-            # self.logger.log(level, message, exception=True, depth=2, **kwargs)
-            self.logger.opt(exception=True, depth=2).error(level, message,  **kwargs)
+            self.logger.log(level, message, exception=True, depth=2, **kwargs)
             # self.logger.exception(exc)
         await self.signals.send_catch_log(
             signal=signals.spider_error,
@@ -162,7 +162,7 @@ class Scraper:
                 process_item_method = getattr(spider, 'process_item', None)
                 if process_item_method:
                     item = await self.call_helper(process_item_method, item)
-                await self._itemproc_finished(output, item, response, spider)
+                await self._itemproc_finished(output, item, request, response, spider)
             elif output is None:
                 pass
             else:
@@ -180,12 +180,12 @@ class Scraper:
             level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
             if type(download_exception).__name__ not in ['CancelledError']:
                 self.logger.log(level, message, **kwargs)
-                self.logger.exception(download_exception)
+                # self.logger.exception(download_exception)
 
         if spider_exception is not download_exception:
             raise spider_exception
 
-    async def _itemproc_finished(self, output, item, response, spider):
+    async def _itemproc_finished(self, output, item, request, response, spider):
         self.slot.itemproc_size -= 1
         if isinstance(output, (Exception, BaseException)):
             if isinstance(output, self.di.get('exceptions').DropItem):
@@ -195,7 +195,7 @@ class Scraper:
                     if type(output).__name__ not in ['CancelledError']:
                         self.logger.log(level, message, **kwargs)
                         self.logger.exception(output)
-                return await self.signals.send_catch_log_coroutine(
+                await self.signals.send_catch_log_coroutine(
                     signal=signals.item_dropped, item=item, response=response,
                     spider=spider, exception=output)
             else:
@@ -204,7 +204,7 @@ class Scraper:
                 if type(output).__name__ not in ['CancelledError']:
                     self.logger.log(level, message, **kwargs)
                     self.logger.exception(output)
-                return await self.signals.send_catch_log_coroutine(
+                await self.signals.send_catch_log_coroutine(
                     signal=signals.item_error, item=item, response=response,
                     spider=spider, failure=output)
         else:
@@ -212,6 +212,13 @@ class Scraper:
             if logkws is not None:
                 level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
                 self.logger.log(level, message, **kwargs)
-            return await self.signals.send_catch_log_coroutine(
+            await self.signals.send_catch_log_coroutine(
                 signal=signals.item_scraped, item=output, response=response,
                 spider=spider)
+        del request
+        del response
+        try:
+            gc.collect()
+        except:
+            self.logger.warning(f'{request} or {response}, gc collect faild!')
+
