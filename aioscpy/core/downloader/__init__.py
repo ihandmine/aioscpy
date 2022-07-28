@@ -79,7 +79,7 @@ class Downloader(object):
         self.randomize_delay = self.settings.getbool('RANDOMIZE_DOWNLOAD_DELAY')
         self.middleware = crawler.load("downloader_middleware")
         self._slot_gc_loop = True
-        asyncio.create_task(self._slot_gc(60))
+        # asyncio.create_task(self._slot_gc(60))
 
         crawler.signals.connect(self.close, signals.engine_stopped)
 
@@ -179,7 +179,8 @@ class Downloader(object):
         return len(self.active) >= self.total_concurrency
 
     def _get_slot(self, request, spider):
-        key = self._get_slot_key(request, spider)
+        # key = self._get_slot_key(request, spider)
+        key = 'aioscpy'
         if key not in self.slots:
             conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
             conc, delay = _get_concurrency_delay(conc, spider, self.settings)
