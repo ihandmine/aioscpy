@@ -125,7 +125,7 @@ class SingleQuotesSpider(Spider):
 
 
 if __name__ == '__main__':
-    quotes = QuotesSpider()
+    quotes = SingleQuotesSpider()
     quotes.start()
 ```
 
