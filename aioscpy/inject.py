@@ -159,7 +159,7 @@ class DependencyInjection(object):
             raise KeyError('Settings DI_CONFIG/DI_CONFIG_CLS not be None')
         for key, value in self.settings['DI_CONFIG'].items():
             self.load_object_slot(key, value)
-        self.slot.live_beat = asyncio.create_task(self.live_beat())
+        # self.slot.live_beat = asyncio.create_task(self.live_beat())
 
     async def live_beat(self):
         while 1:
