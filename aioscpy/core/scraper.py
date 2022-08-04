@@ -1,14 +1,13 @@
 import asyncio
-import gc
 from collections import deque
 
-from aioscpy import signals
+from aioscpy import signals, call_grace_instance
 
 
 class Slot:
     MIN_RESPONSE_SIZE = 1024
 
-    def __init__(self, di, max_active_size=5000000):
+    def __init__(self, max_active_size=5000):
         self.max_active_size = max_active_size
         self.queue = deque()
         self.active = set()
@@ -16,26 +15,26 @@ class Slot:
         self.itemproc_size = 0
         self.closing_future = None
         self.closing_lock = True
-        self.di = di
 
     def add_response_request(self, response, request):
         self.queue.append((response, request))
-        if isinstance(response, self.di.get('response')):
-            self.active_size += max(len(response.body), self.MIN_RESPONSE_SIZE)
-        else:
-            self.active_size += self.MIN_RESPONSE_SIZE
+        self.active.add(request)
+        self.active_size += max(len(response.body), self.MIN_RESPONSE_SIZE)
 
     def next_response_request_deferred(self):
         response, request = self.queue.popleft()
-        self.active.add(request)
         return response, request
 
-    def finish_response(self, response, request):
-        self.active.remove(request)
-        if isinstance(response, self.di.get('response')):
+    def finish_response(self, future):
+        try:
+            request, response = future.result()
+        except (Exception, BaseException, asyncio.CancelledError) as exc:
+            pass
+        finally:
+            self.active.remove(request)
+            # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
             self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
-        else:
-            self.active_size -= self.MIN_RESPONSE_SIZE
+            request, response = None, None
 
     def is_idle(self):
         return self.queue or self.active
@@ -48,21 +47,25 @@ class Scraper:
 
     def __init__(self, crawler, engine):
         self.slot = None
-        self.itemproc = crawler.load("item_processor")
+        self.itemproc = call_grace_instance(self.di.get('item_processor'), only_instance=True).from_crawler(crawler)
         self.crawler = crawler
         self.signals = crawler.signals
         self.logformatter = crawler.load("log_formatter")
         self.call_helper = self.di.get("tools").call_helper
         self.engine = engine
-        self.concurrent_items_semaphore = asyncio.Semaphore(crawler.settings.getint('CONCURRENT_ITEMS', 16))
+        # self.concurrent_items_semaphore = asyncio.Semaphore(crawler.settings.getint('CONCURRENT_ITEMS', 100))
+        self.task_scrape_next = None
 
     async def open_spider(self, spider):
-        self.slot = Slot(self.di, self.crawler.settings.getint('SCRAPER_SLOT_MAX_ACTIVE_SIZE', 5000000))
+        self.slot = call_grace_instance(Slot, self.crawler.settings.getint('SCRAPER_SLOT_MAX_ACTIVE_SIZE', 500000))
         await self.itemproc.open_spider(spider)
+        self.task_scrape_next = asyncio.create_task(self._scrape_next(spider, self.slot))
 
     async def close_spider(self, spider):
         slot = self.slot
         await self.itemproc.close_spider(spider)
+        if self.task_scrape_next is not None:
+            self.task_scrape_next.cancel()
         self._check_if_closing(spider, slot)
 
     def is_idle(self):
@@ -72,25 +75,20 @@ class Scraper:
         if not slot.closing_future and slot.is_idle() and slot.closing_lock:
             slot.closing_lock = False
 
-    async def enqueue_scrape(self, response, request, spider):
+    async def enqueue_scrape(self, response, request):
         slot = self.slot
         slot.add_response_request(response, request)
-        try:
-            await self._scrape_next(spider, slot)
-        except (Exception, BaseException) as e:
-            self.logger.error('Scraper bug processing {request}, {exc}',
-                         **{'request': request, 'exc': e},
-                         exc_info=response,
-                         extra={'spider': spider})
-        finally:
-            slot.finish_response(response, request)
-            self._check_if_closing(spider, slot)
-            asyncio.create_task(self._scrape_next(spider, slot))
 
     async def _scrape_next(self, spider, slot):
-        while slot.queue:
-            response, request = slot.next_response_request_deferred()
-            await self._scrape(response, request, spider)
+        local_lock = True
+        while True:
+            while local_lock and slot.queue:
+                local_lock = False
+                response, request = slot.next_response_request_deferred()
+                future = asyncio.create_task(self._scrape(response, request, spider))
+                future.add_done_callback(self.slot.finish_response)
+                local_lock = True
+            await asyncio.sleep(2)
 
     async def _scrape(self, result, request, spider):
         if not isinstance(result, (self.di.get('response'), Exception, BaseException)):
@@ -101,7 +99,7 @@ class Scraper:
             await self.handle_spider_error(e, request, result, spider)
         else:
             await self.handle_spider_output(response, request, result, spider)
-            asyncio.create_task(self.engine._next_request(spider))
+        return request, result
 
     async def _scrape2(self, result, request, spider):
         try:
@@ -153,25 +151,25 @@ class Scraper:
                 await self._process_spidermw_output(res, request, response, spider)
 
     async def _process_spidermw_output(self, output, request, response, spider):
-        async with self.concurrent_items_semaphore:
-            if isinstance(output, self.di.get('request')):
-                await self.crawler.engine.crawl(request=output, spider=spider)
-            elif isinstance(output, dict):
-                self.slot.itemproc_size += 1
-                item = await self.itemproc.process_item(output, spider)
-                process_item_method = getattr(spider, 'process_item', None)
-                if process_item_method:
-                    item = await self.call_helper(process_item_method, item)
-                await self._itemproc_finished(output, item, request, response, spider)
-            elif output is None:
-                pass
-            else:
-                typename = type(output).__name__
-                self.logger.error(
-                    'Spider must return request, item, or None, got %(typename)r in %(request)s',
-                    {'request': request, 'typename': typename},
-                    extra={'spider': spider},
-                )
+        # async with self.concurrent_items_semaphore:
+        if isinstance(output, self.di.get('request')):
+            await self.crawler.engine.crawl(request=output, spider=spider)
+        elif isinstance(output, dict):
+            self.slot.itemproc_size += 1
+            item = await self.itemproc.process_item(output, spider)
+            process_item_method = getattr(spider, 'process_item', None)
+            if process_item_method:
+                item = await self.call_helper(process_item_method, item)
+            await self._itemproc_finished(output, item, request, response, spider)
+        elif output is None:
+            pass
+        else:
+            typename = type(output).__name__
+            self.logger.error(
+                'Spider must return request, item, or None, got %(typename)r in %(request)s',
+                {'request': request, 'typename': typename},
+                extra={'spider': spider},
+            )
 
     async def _log_download_errors(self, spider_exception, download_exception, request, spider):
         if isinstance(download_exception, (Exception, BaseException)) \
@@ -215,10 +213,3 @@ class Scraper:
             await self.signals.send_catch_log_coroutine(
                 signal=signals.item_scraped, item=output, response=response,
                 spider=spider)
-        del request
-        del response
-        try:
-            gc.collect()
-        except:
-            self.logger.warning(f'{request} or {response}, gc collect faild!')
-
