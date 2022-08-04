@@ -24,15 +24,17 @@ class PriorityQueue(BaseQueue):
                 pipe.zadd(self.key, {data: score})
             await pipe.execute()
 
-    async def pop(self, timeout: int = 0) -> dict:
+    async def pop(self, timeout: int = 0, count: int = 0):
         async with self.server.pipeline(transaction=True) as pipe:
-            results, count = await (
-                pipe.zrange(self.key, 0, 0)
-                    .zremrangebyrank(self.key, 0, 0)
+            results, _ = await (
+                pipe.zrange(self.key, 0, count)
+                    .zremrangebyrank(self.key, 0, count)
                     .execute()
             )
-        if results:
-            return self._decode_request(results[0])
+        _results = []
+        for result in results:
+            _results.append(self._decode_request(result))
+        return _results
 
 
 class AsyncRedis:

@@ -17,9 +17,9 @@ class PriorityQueue(BaseQueue):
         data = self._encode_request(request)
         await self.server.put(data)
 
-    async def pop(self, timeout: int = 0) -> dict:
+    async def pop(self, timeout: int = 0, count: int = 0) -> list:
         _item = await self.server.get()
-        return self._decode_request(_item)
+        return [self._decode_request(_item)]
 
 
 def memory_queue(spider) -> PriorityQueue:
