@@ -120,7 +120,7 @@ class CrawlerProcess(object):
 
         task.add_done_callback(_done)
 
-    def load_spider(self, path=None, spider_key: str = None):
+    def load_spider(self, path=None, spider_key: str = None, spider_like: str = ""):
         if path is None:
             path = ''.join(['./', self.settings.get("NEWSPIDER_MODULE", "spiders")])
         spiders_cls = DependencyInjection.load_all_spider(path)
@@ -131,8 +131,11 @@ class CrawlerProcess(object):
             else:
                 raise KeyError(f"Spider not found: {spider_key}")
         for name, spider_cls in spiders_cls.items():
+            if spider_like and not name.startswith(spider_like):
+                continue
             self.crawl(spider_cls)
-            self.logger.debug("Loading spider({name}) from {path}", **{"name": name, "path": path})
+            self.logger.debug(
+                "Loading spider({name}) from {path}", **{"name": name, "path": path})
 
     async def stop(self):
         return await asyncio.gather(*[c.stop() for c in list(self.crawlers)])
@@ -144,9 +147,6 @@ class CrawlerProcess(object):
             self._group.append(await asyncio.gather(*self._active, return_exceptions=True))
 
     async def _graceful_stop_reactor(self):
-        await self.stop()
-
-    async def _force_stop_reactor(self):
         for task in self._active:
             task.cancel()
         for group in self._group:
@@ -155,6 +155,9 @@ class CrawlerProcess(object):
         for ct in current_task:
             ct.cancel()
         await asyncio.sleep(1)
+        await self.stop()
+
+    async def _force_stop_reactor(self):
         asyncio.get_running_loop().stop()
 
     def _signal_shutdown(self, signum, _):
