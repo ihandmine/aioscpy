@@ -1,11 +1,9 @@
 import asyncio
 import random
 
-from time import time
 from datetime import datetime
 from collections import deque
 
-from aioscpy.utils.othtypes import dnscache, urlparse_cached
 from aioscpy import signals
 from aioscpy import call_grace_instance
 
@@ -13,7 +11,7 @@ from aioscpy import call_grace_instance
 class Slot:
     """Downloader slot"""
 
-    def __init__(self, concurrency, delay, randomize_delay):
+    def __init__(self, concurrency, randomize_delay, delay=0):
         self.concurrency = concurrency
         self.delay = delay
         self.randomize_delay = randomize_delay
@@ -51,35 +49,23 @@ class Slot:
         )
 
 
-def _get_concurrency_delay(concurrency, spider, settings):
-    delay = settings.getfloat('DOWNLOAD_DELAY')
-    if hasattr(spider, 'download_delay'):
-        delay = spider.download_delay
-
-    if hasattr(spider, 'max_concurrent_requests'):
-        concurrency = spider.max_concurrent_requests
-
-    return concurrency, delay
-
-
 class Downloader(object):
     DOWNLOAD_SLOT = 'download_slot'
 
     def __init__(self, crawler):
         self.settings = crawler.settings
         self.crawler = crawler
-        self.slots = {}
+        self.slot = None
         self.active = set()
         self.call_helper = self.di.get("tools").call_helper
-        self.call_create_task = self.di.get("tools").call_create_task
         self.handlers = call_grace_instance('downloader_handler', self.settings, crawler)
         self.total_concurrency = self.settings.getint('CONCURRENT_REQUESTS')
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
         self.ip_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_IP')
         self.randomize_delay = self.settings.getbool('RANDOMIZE_DOWNLOAD_DELAY')
-        self.middleware = crawler.load("downloader_middleware")
-        self._slot_gc_loop = True
-        # asyncio.create_task(self._slot_gc(60))
+        self.middleware = call_grace_instance(self.di.get('downloader_middleware'), only_instance=True).from_crawler(crawler)
+        self.process_queue_task = None
+        self.engine = None
 
         crawler.signals.connect(self.close, signals.engine_stopped)
 
@@ -87,43 +73,28 @@ class Downloader(object):
     def from_crawler(cls, crawler):
         return cls(crawler)
 
-    async def fetch(self, request, spider, _handle_downloader_output):
-        self.active.add(request)
-        key, slot = self._get_slot(request, spider)
-        request.meta[self.DOWNLOAD_SLOT] = key
+    async def open(self, spider, engine):
+        conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
+        self.slot = Slot(conc, self.randomize_delay)
+        self.engine = engine
+        self.process_queue_task = asyncio.create_task(self._process_queue(spider, self.slot))
 
-        slot.active.add(request)
-        slot.queue.append((request, _handle_downloader_output))
-        await self.call_create_task(self._process_queue, spider, slot)
+    async def fetch(self, request):
+        self.active.add(request)
+        self.slot.active.add(request)
+        self.slot.queue.append(request)
 
     async def _process_queue(self, spider, slot):
-        if slot.delay_run:
-            return
+        while True:
+            await asyncio.sleep(0.1)
+            while slot.queue and slot.free_transfer_slots() > 0:
+                request = slot.queue.popleft()
+                asyncio.create_task(self._download(slot, request, spider))
+                slot.transferring.add(request)
+                slot.active.remove(request)
+                self.active.remove(request)
 
-        # Delay queue processing if a download_delay is configured
-        now = time()
-        delay = slot.download_delay()
-        if delay:
-            penalty = delay - now + slot.lastseen
-            if penalty > 0:
-                slot.delay_run = True
-                await asyncio.sleep(penalty)
-                slot.delay_run = False
-                await self.call_create_task(self._process_queue, spider, slot)
-                return
-
-        # Process enqueued requests if there are free slots to transfer for this slot
-        while slot.queue and slot.free_transfer_slots() > 0:
-            slot.lastseen = now
-            request, _handle_downloader_output = slot.queue.popleft()
-            slot.transferring.add(request)
-            await self.call_create_task(self._download, slot, request, spider, _handle_downloader_output)
-            # prevent burst if inter-request delays were configured
-            if delay:
-                await self.call_create_task(self._process_queue, spider, slot)
-                break
-
-    async def _download(self, slot, request, spider, _handle_downloader_output):
+    async def _download(self, slot, request, spider):
         response = None
         response = await self.middleware.process_request(spider, request)
         process_request_method = getattr(spider, "process_request", None)
@@ -150,50 +121,19 @@ class Downloader(object):
                 response = exc
         finally:
             slot.transferring.remove(request)
-            slot.active.remove(request)
-            self.active.remove(request)
-            await self.call_create_task(self._process_queue, spider, slot)
             if isinstance(response, self.di.get('response')):
                 response.request = request
-            await self.call_create_task(_handle_downloader_output, response, request, spider)
+            await self.engine._handle_downloader_output(response, request, spider)
 
     async def close(self):
         try:
-            self._slot_gc_loop = False
             for slot in self.slots.values():
                 slot.close()
             await self.handlers.close()
+            if self.process_queue_task:
+                self.process_queue_task.cancel()
         except (asyncio.CancelledError, Exception, BaseException) as exc:
             pass
 
-    async def _slot_gc(self, age=60):
-        mintime = time() - age
-        for key, slot in list(self.slots.items()):
-            if not slot.active and slot.lastseen + slot.delay < mintime:
-                self.slots.pop(key).close()
-        await asyncio.sleep(age)
-        if self._slot_gc_loop:
-            asyncio.create_task(self._slot_gc())
-
     def needs_backout(self):
         return len(self.active) >= self.total_concurrency
-
-    def _get_slot(self, request, spider):
-        # key = self._get_slot_key(request, spider)
-        key = 'aioscpy'
-        if key not in self.slots:
-            conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
-            conc, delay = _get_concurrency_delay(conc, spider, self.settings)
-            self.slots[key] = Slot(conc, delay, self.randomize_delay)
-
-        return key, self.slots[key]
-
-    def _get_slot_key(self, request, spider):
-        if self.DOWNLOAD_SLOT in request.meta:
-            return request.meta[self.DOWNLOAD_SLOT]
-
-        key = urlparse_cached(request).hostname or ''
-        if self.ip_concurrency:
-            key = dnscache.get(key, key)
-
-        return key
