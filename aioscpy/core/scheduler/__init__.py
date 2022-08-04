@@ -19,12 +19,10 @@ class Scheduler(object):
         await self.queue.push(request)
         return True
 
-    async def next_request(self):
-        request = await self.queue.pop()
-        if request and self.stats:
-            self.stats.inc_value('scheduler/dequeued/redis', spider=self.spider)
-        if request:
-            return request
+    async def async_next_request(self):
+        _results = await self.queue.pop(count=100)
+        self.stats.inc_value('scheduler/dequeued/redis', count=len(_results), spider=self.spider)
+        return _results
 
     async def open(self, start_requests):
         if asyncio.iscoroutine(self.queue):
