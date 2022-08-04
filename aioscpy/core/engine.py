@@ -1,4 +1,5 @@
 import asyncio
+import gc
 
 from time import time
 
@@ -9,7 +10,7 @@ class Slot(object):
 
     def __init__(self, start_requests, close_if_idle, scheduler, crawler):
         self.closing = None
-        self.inprogress = set()  # requests in progress
+        self.inprogress = set()
 
         self.start_requests = start_requests
         self.close_if_idle = close_if_idle
@@ -25,7 +26,6 @@ class Slot(object):
         self.inprogress.remove(request)
 
     async def close(self):
-        # await self.crawler.di.get("tools").task_await(self, "closing_wait")
         self.closing = True
 
 
@@ -40,10 +40,11 @@ class ExecutionEngine(object):
         self.scheduler = None
         self.running = False
         self._heart_beat = None
+        self._task_beat = None
         self.signals = crawler.signals
         self.logformatter = crawler.load("log_formatter")
         self.scheduler = crawler.load("scheduler")
-        self.downloader = crawler.load("downloader")
+        self.downloader = call_grace_instance('downloader', crawler)
         self.scraper = call_grace_instance("scraper", crawler, self)
         self.call_helper = self.di.get("tools").call_helper
         self.lock = asyncio.Lock()
@@ -60,28 +61,18 @@ class ExecutionEngine(object):
         # await self._close_all_spiders()
         await self.signals.send_catch_log_coroutine(signal=signals.engine_stopped)
 
-
-    async def _next_request(self, spider) -> None:
-        async with self.lock:
-            while not self._needs_backout():
-                if not await self.call_helper(self.slot.scheduler.has_pending_requests):
-                    break
-                request = await self.call_helper(self.slot.scheduler.next_request)
-                if request:
-                    self.slot.add_request(request)
-                    await self.downloader.fetch(request, spider, self._handle_downloader_output)
-
-            if self.slot.start_requests and not self._needs_backout():
-                try:
-                    request = await self.slot.start_requests.__anext__()
-                except StopAsyncIteration:
-                    self.slot.start_requests = None
-                except Exception:
-                    self.slot.start_requests = None
-                    self.logger.error('Error while obtaining start requests',
-                                      exc_info=True, extra={'spider': spider})
-                else:
-                    await self.crawl(request, spider)
+    async def start_spider_request(self, spider):
+        if self.slot.start_requests and not self._needs_backout():
+            try:
+                request = await self.slot.start_requests.__anext__()
+            except StopAsyncIteration:
+                self.slot.start_requests = None
+            except Exception:
+                self.slot.start_requests = None
+                self.logger.error('Error while obtaining start requests',
+                                    exc_info=True, extra={'spider': spider})
+            else:
+                await self.crawl(request, spider)
 
     def _needs_backout(self) -> bool:
         return (
@@ -106,8 +97,7 @@ class ExecutionEngine(object):
                                                   response=result, request=request, spider=spider)
         finally:
             self.slot.remove_request(request)
-            asyncio.create_task(self._next_request(self.spider))
-        await self.scraper.enqueue_scrape(result, request, spider)
+        await self.scraper.enqueue_scrape(result, request)
 
     async def spider_is_idle(self, spider):
         if self.scraper.slot.is_idle():
@@ -141,8 +131,7 @@ class ExecutionEngine(object):
 
     async def crawl(self, request, spider):  # 将网址 请求加入队列
         if spider not in self.open_spiders:
-            raise RuntimeError(
-                "Spider %r not opened when crawling: %s" % (spider.name, request))
+            raise RuntimeError("Spider %r not opened when crawling: %s" % (spider.name, request))
 
         await self.signals.send_catch_log(signals.request_scheduled, request=request, spider=spider)
         if not await self.call_helper(self.slot.scheduler.enqueue_request, request):
@@ -150,24 +139,23 @@ class ExecutionEngine(object):
 
     async def open_spider(self, spider, start_requests=None, close_if_idle=True):
         if not self.has_capacity():
-            raise RuntimeError(
-                "No free spider slot when opening %r" % spider.name)
-        self.logger.info(
-            "Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
+            raise RuntimeError("No free spider slot when opening %r" % spider.name)
+        self.logger.info("Spider opened({name})", **{"name": spider.name}, extra={'spider': spider})
 
-        self.slot = Slot(start_requests, close_if_idle,
-                         self.scheduler, self.crawler)
+        self.slot = Slot(start_requests, close_if_idle, self.scheduler, self.crawler)
         self.spider = spider
         await self.call_helper(self.scheduler.open, start_requests)
+        await self.call_helper(self.downloader.open, spider, self)
         await self.call_helper(self.scraper.open_spider, spider)
         await self.call_helper(self.crawler.stats.open_spider, spider)
         await self.signals.send_catch_log_coroutine(signals.spider_opened, spider=spider)
-        await self._next_request(spider)
+        await self.start_spider_request(spider)
         if self.slot is None:
             self.logger.warning("Spider ({name}) to running not found task! please check task is be generated.",
                                 **{"name": spider.name})
             return
         self._heart_beat = asyncio.create_task(self.heart_beat(5, spider, self.slot))
+        self._task_beat = asyncio.create_task(self.task_beat())
 
     async def _close_all_spiders(self):
         dfds = [self.close_spider(s, reason='shutdown') for s in self.open_spiders]
@@ -214,6 +202,8 @@ class ExecutionEngine(object):
         await self._spider_closed_callback()
         if self._heart_beat:
             self._heart_beat.cancel()
+        if self._task_beat:
+            self._task_beat.cancel()
 
     async def _spider_idle(self, spider):
         res = await self.signals.send_catch_log(signals.spider_idle, spider=spider, dont_log=self.di.get("exceptions").DontCloseSpider)
@@ -227,5 +217,29 @@ class ExecutionEngine(object):
             await asyncio.sleep(delay)
             if self.running and await self.spider_is_idle(spider) and slot.close_if_idle:
                 await self._spider_idle(spider)
-            self.logger.warning(f'<logstats: {spider.name}> active: {len(self.downloader.active)}, ingress: {len(self.slot.inprogress)}, scraper: {len(self.scraper.slot.active)}')
-            asyncio.create_task(self._next_request(spider))
+            co = '<logstats: %(spname)s> transferring: %(transfer)s, queue: %(queue)s, active: %(active)s, ingress: %(ingress)s, scraper-active: %(sactive)s, scraper-queue: %(squeue)s, scraper-size: %(size)s' % {
+                'spname': spider.name,
+                'transfer': len(self.downloader.slot.transferring),
+                'queue': len(self.downloader.slot.queue),
+                'active': len(self.downloader.active),
+                'ingress': len(self.slot.inprogress),
+                'sactive': len(self.scraper.slot.active),
+                'squeue': len(self.scraper.slot.queue),
+                'size': self.scraper.slot.active_size,
+            }
+            self.logger.debug(co)
+            try:
+                gc.collect()
+            except:
+                self.logger.warning(f'gc collect faild!')
+
+    async def task_beat(self):
+        local_lock = True
+        while True:
+            while local_lock and not self._needs_backout():
+                local_lock = False
+                for request in await self.slot.scheduler.async_next_request():
+                    self.slot.add_request(request)
+                    await self.downloader.fetch(request)
+                local_lock = True
+            await asyncio.sleep(1)
