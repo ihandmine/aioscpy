@@ -14,7 +14,7 @@ process.start()
 
 def load_file_to_execute():
     process = call_grace_instance("crawler_process", get_project_settings())
-    process.load_spider(path='./cegex')
+    process.load_spider(path='./cegex', spider_like='baidu')
     process.start()
 
 
