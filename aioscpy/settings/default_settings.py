@@ -28,8 +28,6 @@ LOG_RETENTION = "30 days"
 DI_CONFIG = {
     "scheduler": f"{SCHEDULER}",
     'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager',
-    "downloader": "aioscpy.core.downloader.Downloader",
-    "item_processor": "aioscpy.middleware.ItemPipelineManager",
     "log_formatter": "aioscpy.logformatter.LogFormatter",
     "extension": "aioscpy.middleware.ExtensionManager",
 
@@ -42,6 +40,8 @@ DI_CONFIG_CLS = {
     "log": "aioscpy.utils.log",
     "exceptions": "aioscpy.exceptions",
     "tools": "aioscpy.utils.tools",
+    'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager',
+    "item_processor": "aioscpy.middleware.ItemPipelineManager",
 }
 DI_CREATE_CLS = {
     'crawler': 'aioscpy.crawler.Crawler',
@@ -50,7 +50,8 @@ DI_CREATE_CLS = {
     'spider': 'aioscpy.spider.Spider',
     'downloader_handler': f'{DOWNLOAD_HANDLER}',
     'stats': 'aioscpy.libs.statscollectors.MemoryStatsCollector',
-    'scraper': 'aioscpy.core.scraper.Scraper'
+    'scraper': 'aioscpy.core.scraper.Scraper',
+    "downloader": "aioscpy.core.downloader.Downloader",
 }
 
 # message config
