@@ -1,5 +1,6 @@
 import pprint
 import asyncio
+import anyio
 import signal
 
 from aioscpy.settings import overridden_settings
@@ -131,7 +132,7 @@ class CrawlerProcess(object):
             else:
                 raise KeyError(f"Spider not found: {spider_key}")
         for name, spider_cls in spiders_cls.items():
-            if spider_like and not name.startswith(spider_like):
+            if spider_like and not spider_like in name:
                 continue
             self.crawl(spider_cls)
             self.logger.debug(
@@ -177,6 +178,7 @@ class CrawlerProcess(object):
     def start(self):
         self.di.get("tools").install_event_loop_tips()
         try:
-            asyncio.run(self.run())
+            anyio.run(self.run, backend='asyncio')
+            # asyncio.run(self.run())
         except asyncio.CancelledError:
             pass
