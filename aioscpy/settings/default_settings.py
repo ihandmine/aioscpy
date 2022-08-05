@@ -27,7 +27,6 @@ LOG_RETENTION = "30 days"
 
 DI_CONFIG = {
     "scheduler": f"{SCHEDULER}",
-    'downloader_middleware': 'aioscpy.middleware.DownloaderMiddlewareManager',
     "log_formatter": "aioscpy.logformatter.LogFormatter",
     "extension": "aioscpy.middleware.ExtensionManager",
 
