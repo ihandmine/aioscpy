@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from collections import deque
 
 from aioscpy import signals, call_grace_instance
@@ -127,7 +128,7 @@ class Scraper:
         level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
         if type(exc).__name__ not in ['CancelledError']:
             self.logger.log(level, message, exception=True, depth=2, **kwargs)
-            # self.logger.exception(exc)
+            self.logger.error(traceback.format_exc())
         await self.signals.send_catch_log(
             signal=signals.spider_error,
             failure=exc, response=response,
@@ -180,7 +181,7 @@ class Scraper:
             level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
             if type(download_exception).__name__ not in ['CancelledError']:
                 self.logger.log(level, message, **kwargs)
-                # self.logger.exception(download_exception)
+                self.logger.error(traceback.format_exc())
 
         if spider_exception is not download_exception:
             raise spider_exception
@@ -194,7 +195,7 @@ class Scraper:
                     level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
                     if type(output).__name__ not in ['CancelledError']:
                         self.logger.log(level, message, **kwargs)
-                        self.logger.exception(output)
+                        self.logger.error(traceback.format_exc())
                 await self.signals.send_catch_log_coroutine(
                     signal=signals.item_dropped, item=item, response=response,
                     spider=spider, exception=output)
@@ -203,7 +204,7 @@ class Scraper:
                 level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
                 if type(output).__name__ not in ['CancelledError']:
                     self.logger.log(level, message, **kwargs)
-                    self.logger.exception(output)
+                    self.logger.error(traceback.format_exc())
                 await self.signals.send_catch_log_coroutine(
                     signal=signals.item_error, item=item, response=response,
                     spider=spider, failure=output)

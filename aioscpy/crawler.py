@@ -2,6 +2,7 @@ import pprint
 import asyncio
 import anyio
 import signal
+import traceback
 
 from aioscpy.settings import overridden_settings
 from aioscpy.settings import Settings
@@ -50,7 +51,7 @@ class Crawler(object):
             await self.engine.start(self.spider, start_requests)
             await self.di.get("tools").task_await(self, "_close_wait")
         except Exception as e:
-            self.logger.exception(e)
+            self.logger.error(traceback.format_exc())
             self.crawling = False
             if self.engine is not None:
                 await self.engine.close()
