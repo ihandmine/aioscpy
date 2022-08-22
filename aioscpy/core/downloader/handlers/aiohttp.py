@@ -1,18 +1,15 @@
 import asyncio
-import ssl
 import aiohttp
 
 from anti_header import Headers
-from anti_useragent.utils.cipers import generate_cipher
+from anti_useragent.utils.cipers import sslgen
 
 
 class AioHttpDownloadHandler(object):
-    session = None
 
     def __init__(self, settings, crawler):
         self.settings = settings
         self.crawler = crawler
-        self.context = ssl.create_default_context()
         self.aiohttp_client_session = {
             'timeout': aiohttp.ClientTimeout(total=20),
             'trust_env': True,
@@ -25,6 +22,7 @@ class AioHttpDownloadHandler(object):
                 enable_cleanup_closed=True
             )
         }
+        self.session_stats = self.settings.getbool("REQUESTS_SESSION_STATS", False)
         self.session = None
 
     @classmethod
@@ -35,37 +33,36 @@ class AioHttpDownloadHandler(object):
     def from_crawler(cls, crawler):
         return cls.from_settings(crawler.settings, crawler)
 
-    def get_session(self):
-        if self.session is None:
-            self.session = aiohttp.ClientSession(**self.aiohttp_client_session)
-        return self.session
-
     async def download_request(self, request, spider):
-        kwargs = {
+        session_kwargs = {
             'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
             'cookies': dict(request.cookies),
             'data': request.body or None
         }
-        self.session = self.get_session()
         headers = request.headers
         if isinstance(headers, Headers):
             headers = headers.to_unicode_dict()
-        kwargs['headers'] = headers
+        session_kwargs['headers'] = headers
 
-        ssl_ciphers = request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS')
-        if ssl_ciphers:
-            self.context.set_ciphers(generate_cipher())
-            kwargs['ssl'] = self.context
+        if request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS'):
+            session_kwargs['ssl'] = sslgen()
 
-        proxy = request.meta.get("proxy")
-        if proxy:
-            kwargs["proxy"] = proxy
-            self.logger.debug(f"use {proxy} crawling: {request.url}")
+        if request.meta.get("proxy"):
+            session_kwargs["proxy"] = request.meta['proxy']
+            self.logger.debug(f"use {request.meta['proxy']} crawling: {request.url}")
 
-        # async with aiohttp.ClientSession(**aiohttp_client_session) as session:
-        # async with session.request(request.method, request.url, **kwargs) as response:
-        response = await self.session.request(request.method, request.url, **kwargs)
-        content = await response.read()
+        if self.session_stats:
+            if self.session is None:
+                self.session = aiohttp.ClientSession(**self.aiohttp_client_session)
+            response = await self.session.request(request.method, request.url, **session_kwargs)
+            content = await response.read()
+        else:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=20),
+                trust_env=True,
+                connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+                async with session.request(request.method, request.url, **session_kwargs) as response:
+                    content = await response.read()
 
         return self.di.get("response")(
             str(response.url),
