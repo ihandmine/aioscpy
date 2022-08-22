@@ -11,7 +11,6 @@ class HttpxDownloadHandler(object):
     def __init__(self, settings, crawler):
         self.settings = settings
         self.crawler = crawler
-        self.verify_ssl = self.settings.get("VERIFY_SSL")
         self.context = ssl.create_default_context()
 
     @classmethod
@@ -26,26 +25,23 @@ class HttpxDownloadHandler(object):
         headers = request.headers
         if isinstance(headers, Headers):
             headers = headers.to_unicode_dict()
-        kwargs = {
-            'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
-            'cookies': dict(request.cookies),
-            'data': request.body or None,
-            'headers': headers
-        }
         httpx_client_session = {}
 
-        ssl_ciphers = request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS')
-        if ssl_ciphers:
+        if request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS'):
             self.context.set_ciphers(generate_cipher())
             httpx_client_session['verify'] = self.context
 
-        proxy = request.meta.get("proxy")
-        if proxy:
-            httpx_client_session['proxies'] = proxy
-            self.logger.debug(f"use {proxy} crawling: {request.url}")
+        if request.meta.get("proxy"):
+            httpx_client_session['proxies'] = request.meta["proxy"]
+            self.logger.debug(f"use {request.meta['proxy']} crawling: {request.url}")
 
         async with httpx.AsyncClient(**httpx_client_session) as session:
-            response = await session.request(request.method, request.url, **kwargs)
+            response = await session.request(request.method, request.url, kwargs={
+                'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
+                'cookies': dict(request.cookies),
+                'data': request.body or None,
+                'headers': headers
+            })
             content = response.read()
 
         return self.di.get("response")(
