@@ -36,7 +36,7 @@ class HttpxDownloadHandler(object):
             self.logger.debug(f"use {request.meta['proxy']} crawling: {request.url}")
 
         async with httpx.AsyncClient(**httpx_client_session) as session:
-            response = await session.request(request.method, request.url, kwargs={
+            response = await session.request(request.method, request.url, **{
                 'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
                 'cookies': dict(request.cookies),
                 'data': request.body or None,
