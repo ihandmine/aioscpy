@@ -125,8 +125,8 @@ class Downloader(object):
 
     async def close(self):
         try:
-            for slot in self.slots.values():
-                slot.close()
+            if self.slot is not None:
+                self.slot.close()
             await self.handlers.close()
             if self.process_queue_task:
                 self.process_queue_task.cancel()
