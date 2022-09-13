@@ -31,8 +31,8 @@ class Slot:
         try:
             request, response = future.result()
         except (Exception, BaseException, asyncio.CancelledError) as exc:
-            pass
-        finally:
+            self.logger.error(traceback.format_exc())
+        else:
             self.active.remove(request)
             # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
             if hasattr(response, 'body'):
