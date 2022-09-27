@@ -21,7 +21,7 @@ class Slot:
         self.queue.append((response, request))
         self.active.add(request)
         if hasattr(response, 'body'):
-            self.active_size += max(len(response.body), self.MIN_RESPONSE_SIZE)
+            self.active_size += self.MIN_RESPONSE_SIZE
 
     def next_response_request_deferred(self):
         response, request = self.queue.popleft()
@@ -31,13 +31,15 @@ class Slot:
         try:
             request, response = future.result()
         except (Exception, BaseException, asyncio.CancelledError) as exc:
+            self.logger.error("finish_response:")
             self.logger.error(traceback.format_exc())
+            self.active_size -= self.MIN_RESPONSE_SIZE
         else:
             self.active.remove(request)
             # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
             if hasattr(response, 'body'):
-                self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
-            request, response = None, None
+                self.active_size -= self.MIN_RESPONSE_SIZE
+            request, response = None, None        
 
     def is_idle(self):
         return self.queue or self.active
@@ -56,7 +58,7 @@ class Scraper:
         self.logformatter = crawler.load("log_formatter")
         self.call_helper = self.di.get("tools").call_helper
         self.engine = engine
-        # self.concurrent_items_semaphore = asyncio.Semaphore(crawler.settings.getint('CONCURRENT_ITEMS', 100))
+        self.concurrent_items_semaphore = asyncio.Semaphore(crawler.settings.getint('CONCURRENT_ITEMS', 100))
         self.task_scrape_next = None
 
     async def open_spider(self, spider):
@@ -154,25 +156,25 @@ class Scraper:
                 await self._process_spidermw_output(res, request, response, spider)
 
     async def _process_spidermw_output(self, output, request, response, spider):
-        # async with self.concurrent_items_semaphore:
-        if isinstance(output, self.di.get('request')):
-            await self.crawler.engine.crawl(request=output, spider=spider)
-        elif isinstance(output, dict):
-            self.slot.itemproc_size += 1
-            item = await self.itemproc.process_item(output, spider)
-            process_item_method = getattr(spider, 'process_item', None)
-            if process_item_method:
-                item = await self.call_helper(process_item_method, item)
-            await self._itemproc_finished(output, item, request, response, spider)
-        elif output is None:
-            pass
-        else:
-            typename = type(output).__name__
-            self.logger.error(
-                'Spider must return request, item, or None, got %(typename)r in %(request)s',
-                {'request': request, 'typename': typename},
-                extra={'spider': spider},
-            )
+        async with self.concurrent_items_semaphore:
+            if isinstance(output, self.di.get('request')):
+                await self.crawler.engine.crawl(request=output, spider=spider)
+            elif isinstance(output, dict):
+                self.slot.itemproc_size += 1
+                item = await self.itemproc.process_item(output, spider)
+                process_item_method = getattr(spider, 'process_item', None)
+                if process_item_method:
+                    item = await self.call_helper(process_item_method, item)
+                await self._itemproc_finished(output, item, request, response, spider)
+            elif output is None:
+                pass
+            else:
+                typename = type(output).__name__
+                self.logger.error(
+                    'Spider must return request, item, or None, got %(typename)r in %(request)s',
+                    {'request': request, 'typename': typename},
+                    extra={'spider': spider},
+                )
 
     async def _log_download_errors(self, spider_exception, download_exception, request, spider):
         if isinstance(download_exception, (Exception, BaseException)) \
