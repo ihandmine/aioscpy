@@ -1,5 +1,7 @@
 import asyncio
 import traceback
+import functools
+
 from collections import deque
 
 from aioscpy import signals, call_grace_instance
@@ -21,25 +23,25 @@ class Slot:
         self.queue.append((response, request))
         self.active.add(request)
         if hasattr(response, 'body'):
-            self.active_size += self.MIN_RESPONSE_SIZE
+            self.active_size += max(len(response.body), self.MIN_RESPONSE_SIZE)
 
     def next_response_request_deferred(self):
         response, request = self.queue.popleft()
         return response, request
 
-    def finish_response(self, future):
-        try:
-            request, response = future.result()
-        except (Exception, BaseException, asyncio.CancelledError) as exc:
-            self.logger.error("finish_response:")
-            self.logger.error(traceback.format_exc())
-            self.active_size -= self.MIN_RESPONSE_SIZE
-        else:
-            self.active.remove(request)
-            # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
-            if hasattr(response, 'body'):
-                self.active_size -= self.MIN_RESPONSE_SIZE
-            request, response = None, None        
+    def finish_response(self, request, response, future):
+        # try:
+        #     request, response = future.result()
+        # except (Exception, BaseException, asyncio.CancelledError) as exc:
+        #     self.logger.error("finish_response:")
+        #     self.logger.error(traceback.format_exc())
+        #     self.active_size -= self.MIN_RESPONSE_SIZE
+        # else:
+        self.active.remove(request)
+        # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
+        if hasattr(response, 'body'):
+            self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
+        request, response = None, None        
 
     def is_idle(self):
         return self.queue or self.active
@@ -91,7 +93,7 @@ class Scraper:
                 local_lock = False
                 response, request = slot.next_response_request_deferred()
                 future = asyncio.create_task(self._scrape(response, request, spider))
-                future.add_done_callback(self.slot.finish_response)
+                future.add_done_callback(functools.partial(self.slot.finish_response, request, response))
                 local_lock = True
             await asyncio.sleep(2)
 
