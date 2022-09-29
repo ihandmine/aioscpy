@@ -162,11 +162,14 @@ class Scraper:
             if isinstance(output, self.di.get('request')):
                 await self.crawler.engine.crawl(request=output, spider=spider)
             elif isinstance(output, dict):
-                self.slot.itemproc_size += 1
-                item = await self.itemproc.process_item(output, spider)
-                process_item_method = getattr(spider, 'process_item', None)
-                if process_item_method:
-                    item = await self.call_helper(process_item_method, item)
+                try:
+                    self.slot.itemproc_size += 1
+                    item = await self.itemproc.process_item(output, spider)
+                    process_item_method = getattr(spider, 'process_item', None)
+                    if process_item_method:
+                        item = await self.call_helper(process_item_method, item)
+                except Exception as e:
+                    self.logger.error(traceback.format_exc())
                 await self._itemproc_finished(output, item, request, response, spider)
             elif output is None:
                 pass
