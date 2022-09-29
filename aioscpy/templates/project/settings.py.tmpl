@@ -3,6 +3,7 @@ BOT_NAME = '$project_name'
 SPIDER_MODULES = ['spiders']
 NEWSPIDER_MODULE = 'spiders'
 
+# CONCURRENT_ITEMS = 100
 # CONCURRENT_REQUESTS = 16
 # CONCURRENT_REQUESTS_PER_DOMAIN = 8
 # CONCURRENT_REQUESTS_PER_IP = 0
@@ -11,9 +12,12 @@ NEWSPIDER_MODULE = 'spiders'
 # DOWNLOAD_DELAY = 0
 # DOWNLOAD_TIMEOUT = 20
 # DOWNLOAD_HANDLER = "aioscpy.core.downloader.http.AioHttpDownloadHandler"
+# DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.httpx.HttpxDownloadHandler"
 # SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
 # SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
 # REQUESTS_SESSION_STATS = False
+
+# SCRAPER_SLOT_MAX_ACTIVE_SIZE = 500000
 
 
 # SPIDER_IDLE = False
