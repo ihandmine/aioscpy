@@ -8,7 +8,7 @@ class ${ProjectName}DownloaderMiddleware:
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
 
-    def process_request(self, request, spider):
+    def process_request(self, spider, request):
         # Called for each request that goes through the downloader
         # middleware.
 
