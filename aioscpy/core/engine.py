@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import gc
 
 from time import time
@@ -95,6 +96,8 @@ class ExecutionEngine(object):
                     self.logger.log(level, message, **kwargs)
                 await self.signals.send_catch_log(signals.response_received,
                                                   response=result, request=request, spider=spider)
+        except Exception as e:
+            self.logger.error(f"enqueue_scrape: {traceback.format_exc()}")
         finally:
             self.slot.remove_request(request)
         await self.scraper.enqueue_scrape(result, request)
