@@ -174,3 +174,5 @@ please submit your sugguestion to owner by issue
 [scrapy](https://github.com/scrapy/scrapy)
 
 [loguru](https://github.com/Delgan/loguru)
+
+[httpx](https://github.com/encode/httpx)
