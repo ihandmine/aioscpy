@@ -63,6 +63,7 @@ class Downloader(object):
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
         self.ip_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_IP')
         self.randomize_delay = self.settings.getbool('RANDOMIZE_DOWNLOAD_DELAY')
+        self.delay = self.settings.getfloat('DOWNLOAD_DELAY')
         self.middleware = call_grace_instance(self.di.get('downloader_middleware'), only_instance=True).from_crawler(crawler)
         self.process_queue_task = None
         self.engine = None
@@ -75,7 +76,7 @@ class Downloader(object):
 
     async def open(self, spider, engine):
         conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
-        self.slot = Slot(conc, self.randomize_delay)
+        self.slot = Slot(conc, self.randomize_delay, self.delay)
         self.engine = engine
         self.process_queue_task = asyncio.create_task(self._process_queue(spider, self.slot))
 
@@ -88,6 +89,8 @@ class Downloader(object):
         while True:
             await asyncio.sleep(0.1)
             while slot.queue and slot.free_transfer_slots() > 0:
+                if slot.download_delay():
+                    await asyncio.sleep(slot.download_delay())
                 request = slot.queue.popleft()
                 asyncio.create_task(self._download(slot, request, spider))
                 slot.transferring.add(request)
