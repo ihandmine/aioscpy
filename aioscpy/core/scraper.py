@@ -37,7 +37,8 @@ class Slot:
         #     self.logger.error(traceback.format_exc())
         #     self.active_size -= self.MIN_RESPONSE_SIZE
         # else:
-        self.active.remove(request)
+        if request in self.active:
+            self.active.remove(request)
         # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
         if hasattr(response, 'body'):
             self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
@@ -102,10 +103,9 @@ class Scraper:
             raise TypeError(f"Incorrect type: expected Response or Failure, got {type(result)}: {result!r}")
         try:
             response = await self._scrape2(result, request, spider)  # returns spider's processed output
+            await self.handle_spider_output(response, request, result, spider)
         except (Exception, BaseException) as e:
             await self.handle_spider_error(e, request, result, spider)
-        else:
-            await self.handle_spider_output(response, request, result, spider)
         return request, result
 
     async def _scrape2(self, result, request, spider):
@@ -174,6 +174,7 @@ class Scraper:
             elif output is None:
                 pass
             else:
+                self.slot.finish_response(request, response, "")
                 typename = type(output).__name__
                 self.logger.error(
                     'Spider must return request, item, or None, got %(typename)r in %(request)s',
