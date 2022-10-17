@@ -51,7 +51,7 @@ class Crawler(object):
             await self.engine.start(self.spider, start_requests)
             await self.di.get("tools").task_await(self, "_close_wait")
         except Exception as e:
-            self.logger.error(traceback.format_exc())
+            self.logger.error(f"crawler: {traceback.format_exc()}")
             self.crawling = False
             if self.engine is not None:
                 await self.engine.close()

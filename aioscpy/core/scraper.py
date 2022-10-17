@@ -132,7 +132,7 @@ class Scraper:
         level, message, kwargs = self.di.get("log").logformatter_adapter(logkws)
         if type(exc).__name__ not in ['CancelledError']:
             self.logger.log(level, message, exception=True, depth=2, **kwargs)
-            self.logger.error(traceback.format_exc())
+            self.logger.error(f"handle_spider_error: {traceback.format_exc()}")
         await self.signals.send_catch_log(
             signal=signals.spider_error,
             failure=exc, response=response,
@@ -169,7 +169,7 @@ class Scraper:
                     if process_item_method:
                         item = await self.call_helper(process_item_method, item)
                 except Exception as e:
-                    self.logger.error(traceback.format_exc())
+                    self.logger.error(f"process_spidermw_output: {traceback.format_exc()}")
                 await self._itemproc_finished(output, item, request, response, spider)
             elif output is None:
                 pass
