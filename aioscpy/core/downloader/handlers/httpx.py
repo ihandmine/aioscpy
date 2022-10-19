@@ -40,7 +40,8 @@ class HttpxDownloadHandler(object):
                 'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
                 'cookies': dict(request.cookies),
                 'data': request.body or None,
-                'headers': headers
+                'headers': headers,
+                'follow_redirects': True
             })
             content = response.read()
 
