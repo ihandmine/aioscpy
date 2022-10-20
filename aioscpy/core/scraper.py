@@ -174,7 +174,6 @@ class Scraper:
             elif output is None:
                 pass
             else:
-                self.slot.finish_response(request, response, "")
                 typename = type(output).__name__
                 self.logger.error(
                     'Spider must return request, item, or None, got %(typename)r in %(request)s',
