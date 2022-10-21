@@ -164,7 +164,6 @@ class Scraper:
                 except Exception as e:
                     self.logger.error(f"process_spidermw_output: {traceback.format_exc()}")
                 await self._itemproc_finished(output, item, request, response, spider)
-                self.slot.finish_response(request, response)
             elif output is None:
                 pass
             else:
@@ -174,6 +173,7 @@ class Scraper:
                     {'request': request, 'typename': typename},
                     extra={'spider': spider},
                 )
+            self.slot.finish_response(request, response)
 
     async def _log_download_errors(self, spider_exception, download_exception, request, spider):
         if isinstance(download_exception, (Exception, BaseException)) \
