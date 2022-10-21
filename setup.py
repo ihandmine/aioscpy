@@ -77,7 +77,8 @@ setup(
         "w3lib",
         "parsel",
         "PyDispatcher",
-        "redis"
+        "redis",
+        "anyio"
     ],
     description=DESCRIPTION,
     long_description=long_description,
