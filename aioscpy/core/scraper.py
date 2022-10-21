@@ -29,7 +29,7 @@ class Slot:
         response, request = self.queue.popleft()
         return response, request
 
-    def finish_response(self, request, response, future):
+    def finish_response(self, request, response):
         # try:
         #     request, response = future.result()
         # except (Exception, BaseException, asyncio.CancelledError) as exc:
@@ -94,7 +94,7 @@ class Scraper:
                 local_lock = False
                 response, request = slot.next_response_request_deferred()
                 future = asyncio.create_task(self._scrape(response, request, spider))
-                future.add_done_callback(functools.partial(self.slot.finish_response, request, response))
+                # future.add_done_callback(functools.partial(self.slot.finish_response, request, response))
                 local_lock = True
             await asyncio.sleep(2)
 
@@ -171,6 +171,7 @@ class Scraper:
                 except Exception as e:
                     self.logger.error(f"process_spidermw_output: {traceback.format_exc()}")
                 await self._itemproc_finished(output, item, request, response, spider)
+                self.slot.finish_response(request, response)
             elif output is None:
                 pass
             else:
