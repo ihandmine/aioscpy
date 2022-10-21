@@ -30,13 +30,6 @@ class Slot:
         return response, request
 
     def finish_response(self, request, response):
-        # try:
-        #     request, response = future.result()
-        # except (Exception, BaseException, asyncio.CancelledError) as exc:
-        #     self.logger.error("finish_response:")
-        #     self.logger.error(traceback.format_exc())
-        #     self.active_size -= self.MIN_RESPONSE_SIZE
-        # else:
         if request in self.active:
             self.active.remove(request)
         # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
