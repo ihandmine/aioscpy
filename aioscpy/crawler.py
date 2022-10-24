@@ -4,17 +4,20 @@ import anyio
 import signal
 import traceback
 
+from typing import Optional, Type, Union, Any
+
 from aioscpy.settings import overridden_settings
 from aioscpy.settings import Settings
 from aioscpy.signalmanager import SignalManager
 from aioscpy.utils.ossignal import install_shutdown_handlers, signal_names
 from aioscpy.inject import DependencyInjection
 from aioscpy import call_grace_instance
+from aioscpy.spider import Spider
 
 
 class Crawler(object):
 
-    def __init__(self, spidercls, *args, settings=None, **kwargs):
+    def __init__(self, spidercls: Type[Spider], settings: Union[Settings, dict, None] = None, * args, ** kwargs):
 
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
@@ -37,7 +40,7 @@ class Crawler(object):
         self.extensions = self.load('extension')
         self._close_wait = None
 
-    async def crawl(self):
+    async def crawl(self) -> None:
         if self.crawling:
             raise RuntimeError("Crawling already taking place")
         self.crawling = True
@@ -57,7 +60,7 @@ class Crawler(object):
                 await self.engine.close()
             raise e
 
-    def load(self, key):
+    def load(self, key: str) -> Any:
         return self.DI.load(key)
 
     def _create_spider(self, *args, **kwargs):
@@ -82,7 +85,7 @@ class CrawlerProcess(object):
         doc="Set of :class:`crawlers <aioscpy.crawler.Crawler>`"
     )
 
-    def __init__(self, settings=None, install_root_handler=True):
+    def __init__(self, settings: Union[Settings, dict, None] = None):
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
         self.settings = settings
@@ -93,16 +96,16 @@ class CrawlerProcess(object):
         install_shutdown_handlers(self._signal_shutdown)
         self.di.get("log").std_log_aioscpy_info(settings)
 
-    def crawl(self, crawler_or_spidercls, *args, **kwargs):
+    def crawl(self, crawler_or_spidercls: Union[Type[Spider], Crawler], *args, **kwargs) -> Crawler:
         crawler = self.create_crawler(crawler_or_spidercls, *args, **kwargs)
         self.crawlers.add(crawler)
         return crawler
 
-    def crawl_soon(self, crawler_or_spidercls, *args, **kwargs):
+    def crawl_soon(self, crawler_or_spidercls: Union[Type[Spider], Crawler], *args, **kwargs):
         crawler = self.crawl(crawler_or_spidercls, *args, **kwargs)
         self.active_crawler(crawler)
 
-    def create_crawler(self, crawler_or_spidercls, *args, **kwargs):
+    def create_crawler(self, crawler_or_spidercls: Union[Type[Spider], Crawler], *args, **kwargs) -> Crawler:
         if isinstance(crawler_or_spidercls, Crawler):
             return crawler_or_spidercls
         if isinstance(crawler_or_spidercls, str):
@@ -110,7 +113,7 @@ class CrawlerProcess(object):
         settings = kwargs.pop('settings', self.settings)
         return call_grace_instance("crawler", crawler_or_spidercls, *args, settings=settings, **kwargs)
 
-    def active_crawler(self, crawler):
+    def active_crawler(self, crawler: Crawler):
         task = asyncio.create_task(crawler.crawl())
         self._active.add(task)
 
@@ -122,7 +125,7 @@ class CrawlerProcess(object):
 
         task.add_done_callback(_done)
 
-    def load_spider(self, path=None, spider_key: str = None, spider_like: str = ""):
+    def load_spider(self, path: str = None, spider_key: str = None, spider_like: str = ""):
         if path is None:
             path = ''.join(['./', self.settings.get("NEWSPIDER_MODULE", "spiders")])
         spiders_cls = DependencyInjection.load_all_spider(path)
