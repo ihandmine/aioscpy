@@ -97,6 +97,7 @@ class Scraper:
         try:
             response = await self._scrape2(result, request, spider)  # returns spider's processed output
             await self.handle_spider_output(response, request, result, spider)
+            self.slot.finish_response(request, result)
         except (Exception, BaseException) as e:
             await self.handle_spider_error(e, request, result, spider)
         return request, result
@@ -173,7 +174,6 @@ class Scraper:
                     {'request': request, 'typename': typename},
                     extra={'spider': spider},
                 )
-            self.slot.finish_response(request, response)
 
     async def _log_download_errors(self, spider_exception, download_exception, request, spider):
         if isinstance(download_exception, (Exception, BaseException)) \
