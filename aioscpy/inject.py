@@ -70,7 +70,7 @@ class DependencyInjection(object):
     def from_crawler(cls, crawler):
         return cls.from_settings(crawler.settings, crawler)
 
-    def load(self, key):
+    def load(self, key: str):
         return self.slot.get(key)
 
     @staticmethod
