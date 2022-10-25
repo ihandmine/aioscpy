@@ -20,7 +20,7 @@ Distributed crawling/scraping.
 
 ### Requirements
 
-- Python 3.7+
+- Python 3.8+
 - Works on Linux, Windows, macOS, BSD
 
 ### Install

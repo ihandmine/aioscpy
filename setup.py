@@ -11,7 +11,7 @@ DESCRIPTION = "An asyncio + aiolibs crawler imitate scrapy framework"
 URL = "https://github.com/ihandmine/aioscpy"
 EMAIL = "handmine@outlook.com"
 AUTHOR = "handmine"
-REQUIRES_PYTHON = ">=3.7.0"
+REQUIRES_PYTHON = ">=3.8.0"
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(f"{here}/README.md", encoding='utf-8') as f:
