@@ -30,8 +30,7 @@ class Slot:
         return response, request
 
     def finish_response(self, request, response):
-        if request in self.active:
-            self.active.remove(request)
+        self.active.discard(request)
         # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
         if hasattr(response, 'body'):
             self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
