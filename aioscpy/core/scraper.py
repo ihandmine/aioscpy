@@ -1,6 +1,5 @@
 import asyncio
 import traceback
-import functools
 
 from collections import deque
 
@@ -10,7 +9,7 @@ from aioscpy import signals, call_grace_instance
 class Slot:
     MIN_RESPONSE_SIZE = 1024
 
-    def __init__(self, max_active_size=5000):
+    def __init__(self, max_active_size: int = 5000):
         self.max_active_size = max_active_size
         self.queue = deque()
         self.active = set()
@@ -45,14 +44,13 @@ class Slot:
 
 class Scraper:
 
-    def __init__(self, crawler, engine):
+    def __init__(self, crawler):
         self.slot = None
         self.itemproc = call_grace_instance(self.di.get('item_processor'), only_instance=True).from_crawler(crawler)
         self.crawler = crawler
         self.signals = crawler.signals
         self.logformatter = crawler.load("log_formatter")
         self.call_helper = self.di.get("tools").call_helper
-        self.engine = engine
         self.concurrent_items_semaphore = asyncio.Semaphore(crawler.settings.getint('CONCURRENT_ITEMS', 100))
         self.task_scrape_next = None
 
@@ -85,8 +83,7 @@ class Scraper:
             while local_lock and slot.queue:
                 local_lock = False
                 response, request = slot.next_response_request_deferred()
-                future = asyncio.create_task(self._scrape(response, request, spider))
-                # future.add_done_callback(functools.partial(self.slot.finish_response, request, response))
+                asyncio.create_task(self._scrape(response, request, spider))
                 local_lock = True
             await asyncio.sleep(2)
 
