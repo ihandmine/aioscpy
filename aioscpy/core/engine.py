@@ -46,7 +46,7 @@ class ExecutionEngine(object):
         self.logformatter = crawler.load("log_formatter")
         self.scheduler = crawler.load("scheduler")
         self.downloader = call_grace_instance('downloader', crawler)
-        self.scraper = call_grace_instance("scraper", crawler, self)
+        self.scraper = call_grace_instance("scraper", crawler)
         self.call_helper = self.di.get("tools").call_helper
         self.lock = asyncio.Lock()
         self._spider_closed_callback = spider_closed_callback
