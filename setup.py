@@ -61,6 +61,13 @@ class UploadCommand(Command):
 
         with open(join(dirname(__file__), 'aioscpy/VERSION'), 'w') as f:
             f.write(VERSION + '\n')
+
+        self.status("git option [add]")
+        os.system("git add aioscpy/VERSION")
+
+        self.status("git option [commit][push]")
+        os.system(f'git commit -m "{VERSION}"')
+        os.system("git push")
         sys.exit()
 
 
