@@ -8,7 +8,8 @@ from pprint import pprint, pformat
 class BaiduSpider(Spider):
     name = 'baidu'
     custom_settings = {
-        "SPIDER_IDLE": False
+        "SPIDER_IDLE": False,
+        'TLS_CIPHERS': True,
     }
     start_urls = [f'https://www.baidu.com/?a{i}' for i in range(10)]
 
