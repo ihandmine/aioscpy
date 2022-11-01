@@ -1,8 +1,9 @@
 import asyncio
+import ssl
 import aiohttp
 
 from anti_header import Headers
-from anti_useragent.utils.cipers import sslgen
+from anti_useragent.utils.cipers import generate_cipher
 
 
 class AioHttpDownloadHandler(object):
@@ -24,6 +25,7 @@ class AioHttpDownloadHandler(object):
         }
         self.session_stats = self.settings.getbool("REQUESTS_SESSION_STATS", False)
         self.session = None
+        self.context = ssl.create_default_context()
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -45,7 +47,8 @@ class AioHttpDownloadHandler(object):
         session_kwargs['headers'] = headers
 
         if request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS'):
-            session_kwargs['ssl'] = sslgen()
+            self.context.set_ciphers(generate_cipher())
+            session_kwargs['ssl'] = self.context
 
         if request.meta.get("proxy"):
             session_kwargs["proxy"] = request.meta['proxy']
