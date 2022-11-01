@@ -24,7 +24,7 @@ class Slot(object):
         self.inprogress.add(request)
 
     def remove_request(self, request):
-        self.inprogress.remove(request)
+        self.inprogress.discard(request)
 
     async def close(self):
         self.closing = True

@@ -121,7 +121,7 @@ class Downloader(object):
             except (Exception, BaseException) as exc:
                 response = exc
         finally:
-            slot.transferring.remove(request)
+            slot.transferring.discard(request)
             if isinstance(response, self.di.get('response')):
                 response.request = request
             await self.engine._handle_downloader_output(response, request, spider)
