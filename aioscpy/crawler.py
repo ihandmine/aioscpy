@@ -181,6 +181,7 @@ class CrawlerProcess(object):
 
     def start(self):
         self.di.get("tools").install_event_loop_tips()
+        self.di.get("tools").install_patch_method()
         try:
             anyio.run(self.run, backend='asyncio')
             # asyncio.run(self.run())
