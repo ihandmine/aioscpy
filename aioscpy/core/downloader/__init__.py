@@ -89,21 +89,21 @@ class Downloader(object):
         while True:
             await asyncio.sleep(0.1)
             while slot.queue and slot.free_transfer_slots() > 0:
-                if slot.download_delay():
-                    await asyncio.sleep(slot.download_delay())
                 request = slot.queue.popleft()
                 asyncio.create_task(self._download(slot, request, spider))
                 slot.transferring.add(request)
                 slot.active.remove(request)
                 self.active.remove(request)
+                if slot.download_delay():
+                    await asyncio.sleep(slot.download_delay())
 
     async def _download(self, slot, request, spider):
-        response = None
-        response = await self.middleware.process_request(spider, request)
-        process_request_method = getattr(spider, "process_request", None)
-        if process_request_method:
-            response = await self.call_helper(process_request_method, request)
         try:
+            response = None
+            response = await self.middleware.process_request(spider, request)
+            process_request_method = getattr(spider, "process_request", None)
+            if process_request_method:
+                response = await self.call_helper(process_request_method, request)
             if response is None or isinstance(response, self.di.get('request')):
                 request = response or request
                 response = await self.handlers.download_request(request, spider)
