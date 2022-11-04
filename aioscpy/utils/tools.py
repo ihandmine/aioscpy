@@ -1,3 +1,5 @@
+import ujson
+import json
 import asyncio
 import weakref
 import sys
@@ -320,3 +322,13 @@ def obsolete_setter(setter, attrname):
         msg = "%s.%s is not modifiable, use %s.replace() instead" % (c, attrname, c)
         raise AttributeError(msg)
     return newsetter
+
+
+def monkey_patch_json():
+    json.__name__ = 'ujson'
+    json.dumps = ujson.dumps
+    json.loads = ujson.loads
+
+
+def install_patch_method():
+    monkey_patch_json()
