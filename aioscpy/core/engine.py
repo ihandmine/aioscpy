@@ -1,6 +1,7 @@
 import asyncio
 import traceback
 import gc
+import os
 
 from time import time
 
@@ -220,8 +221,9 @@ class ExecutionEngine(object):
             await asyncio.sleep(delay)
             if self.running and await self.spider_is_idle(spider) and slot.close_if_idle:
                 await self._spider_idle(spider)
-            co = '<logstats: %(spname)s> transferring: %(transfer)s, queue: %(queue)s, active: %(active)s, ingress: %(ingress)s, scraper-active: %(sactive)s, scraper-queue: %(squeue)s, scraper-size: %(size)s' % {
+            co = '<logstats: %(spname)s> pid: %(pid)s, transferring: %(transfer)s, queue: %(queue)s, active: %(active)s, ingress: %(ingress)s, scraper-active: %(sactive)s, scraper-queue: %(squeue)s, scraper-size: %(size)s' % {
                 'spname': spider.name,
+                'pid': os.getpid(),
                 'transfer': len(self.downloader.slot.transferring),
                 'queue': len(self.downloader.slot.queue),
                 'active': len(self.downloader.active),
