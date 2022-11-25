@@ -35,14 +35,19 @@ class HttpxDownloadHandler(object):
             httpx_client_session['proxies'] = request.meta["proxy"]
             self.logger.debug(f"use {request.meta['proxy']} crawling: {request.url}")
 
+        session_kwargs = {
+            'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
+            'cookies': dict(request.cookies),
+            'headers': headers,
+            'follow_redirects': True
+        }
+        if isinstance(request.body, dict):
+            session_kwargs['json'] = request.body or None
+        else:
+            session_kwargs['data'] = request.body or None
+        
         async with httpx.AsyncClient(**httpx_client_session) as session:
-            response = await session.request(request.method, request.url, **{
-                'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
-                'cookies': dict(request.cookies),
-                'data': request.body or None,
-                'headers': headers,
-                'follow_redirects': True
-            })
+            response = await session.request(request.method, request.url, **session_kwargs)
             content = response.read()
 
         return self.di.get("response")(
