@@ -39,8 +39,12 @@ class AioHttpDownloadHandler(object):
         session_kwargs = {
             'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
             'cookies': dict(request.cookies),
-            'data': request.body or None
         }
+        if isinstance(request.body, dict):
+            session_kwargs['json'] = request.body or None
+        else:
+            session_kwargs['data'] = request.body or None
+        
         headers = request.headers
         if isinstance(headers, Headers):
             headers = headers.to_unicode_dict()
