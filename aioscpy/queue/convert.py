@@ -2,6 +2,7 @@
 Helper functions for serializing (and deserializing) requests.
 """
 import inspect
+import json
 
 from aioscpy import call_grace_instance
 from aioscpy.http import Request
@@ -37,8 +38,9 @@ def request_to_dict(request, spider=None):
         'flags': request.flags,
         'cb_kwargs': request.cb_kwargs,
     }
-    # if type(request) is not Request:
-    #     d['_class'] = request.__module__ + '.' + request.__class__.__name__
+    if type(request) == "JsonRequest":
+        base_cls = request.__class__.__bases__[0]
+        d['_class'] = base_cls.__module__ + '.' + base_cls.__name__
     return d
 
 
@@ -55,6 +57,11 @@ def request_from_dict(d, spider=None):
     if eb and spider:
         eb = _get_method(spider, eb)
     request_cls = load_object(d['_class']) if '_class' in d else Request
+
+    if request_cls.__name__ == "JsonRequest":
+        _body = json.loads(d.get('body', ""))
+    else:
+        _body = d.get('body', None)
     return call_grace_instance(
             request_cls,
             url=to_unicode(d['url']),
@@ -62,7 +69,7 @@ def request_from_dict(d, spider=None):
             errback=eb,
             method=d.get('method', 'GET'),
             headers=Headers(d.get('headers', {})),
-            body=d.get('body', None),
+            body=_body,
             cookies=d.get('cookies'),
             meta=d.get('meta'),
             encoding=d.get('_encoding', 'utf-8'),
