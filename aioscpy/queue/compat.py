@@ -7,7 +7,7 @@ from aioscpy.utils.tools import to_unicode
 def _request_byte2str(obj):
     _encoding = obj.get('_encoding', 'utf-8')
     obj.update({
-        'body': obj['body'].decode(_encoding),
+        'body': obj['body'].decode(_encoding) if isinstance(obj['body'], bytes) else json.dumps(obj['body']),
         'headers': {
             to_unicode(k, encoding=_encoding): to_unicode(b','.join(v), encoding=_encoding)
             for k, v in obj['headers'].items()
