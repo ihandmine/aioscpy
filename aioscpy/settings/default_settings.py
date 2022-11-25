@@ -36,6 +36,7 @@ DI_CONFIG_CLS = {
     "request": "aioscpy.http.Request",
     "response": "aioscpy.http.TextResponse",
     "form_request": "aioscpy.http.FormRequest",
+    "json_request": "aioscpy.http.JsonRequest",
     "logger": "aioscpy.utils.log.logger",
     "log": "aioscpy.utils.log",
     "exceptions": "aioscpy.exceptions",
