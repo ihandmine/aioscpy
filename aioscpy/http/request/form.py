@@ -20,7 +20,7 @@ class FormRequest(Request):
             if self.method == 'POST':
                 self.headers.setdefault(
                     b'Content-Type', [b'application/x-www-form-urlencoded'])
-                self._set_body(querystr)
+                self._set_body(to_bytes(querystr, self.encoding))
             else:
                 self._set_url(
                     self.url + ('&' if '?' in self.url else '?') + querystr)
