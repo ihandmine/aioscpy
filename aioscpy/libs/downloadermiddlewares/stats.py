@@ -22,7 +22,7 @@ def request_httprepr(request: "Request") -> bytes:
     if request.headers:
         s += request.headers.to_string() + b"\r\n"
     s += b"\r\n"
-    s += request.body
+    s += str(request.body).encode() if isinstance(request.body, dict) else request.body
     return s
 
 
