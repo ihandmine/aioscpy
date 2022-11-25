@@ -76,7 +76,7 @@ class Request(object):
         if body is None:
             self._body = b''
         else:
-            self._body = self.di.get("tools").to_bytes(body, self.encoding)
+            self._body = body
 
     body = property(_get_body, _set_body)
 
