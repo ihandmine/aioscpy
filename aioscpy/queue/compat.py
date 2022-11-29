@@ -6,8 +6,14 @@ from aioscpy.utils.tools import to_unicode
 
 def _request_byte2str(obj):
     _encoding = obj.get('_encoding', 'utf-8')
+    if isinstance(obj['body'], bytes):
+        _body = obj['body'].decode(_encoding)
+    elif isinstance(obj['body'], dict):
+        _body = json.dumps(obj['body'])
+    else:
+        _body = obj['body']
     obj.update({
-        'body': obj['body'].decode(_encoding) if isinstance(obj['body'], bytes) else json.dumps(obj['body']),
+        'body': _body,
         'headers': {
             to_unicode(k, encoding=_encoding): to_unicode(b','.join(v), encoding=_encoding)
             for k, v in obj['headers'].items()
