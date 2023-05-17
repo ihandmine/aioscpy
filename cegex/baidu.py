@@ -10,6 +10,7 @@ class BaiduSpider(Spider):
     custom_settings = {
         "SPIDER_IDLE": False,
         'TLS_CIPHERS': True,
+        "DOWNLOAD_HANDLER": "aioscpy.core.downloader.handlers.requests.RequestsDownloadHandler"
     }
     start_urls = [f'https://www.baidu.com/?a{i}' for i in range(10)]
 
