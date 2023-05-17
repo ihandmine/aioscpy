@@ -11,6 +11,7 @@ DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 20
 # DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.aiohttp.AioHttpDownloadHandler"
 DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.httpx.HttpxDownloadHandler"
+# DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.requests.RequestsDownloadHandler"
 # SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
 SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
 REQUESTS_SESSION_STATS = False
