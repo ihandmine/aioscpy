@@ -20,7 +20,7 @@ Aioscpy是一个快速的高级web爬行和web抓取框架，用于抓取网站�
 
 ### 需求
 
-- Python 3.7+
+- Python 3.8+
 - Works on Linux, Windows, macOS, BSD
 
 ### 安装
@@ -28,7 +28,17 @@ Aioscpy是一个快速的高级web爬行和web抓取框架，用于抓取网站�
 快速安装方式:
 
 ```shell
+# 默认
 pip install aioscpy
+
+# 使用最新版本
+pip install git+https://github.com/ihandmine/aioscpy
+
+# 安装所有依赖
+pip install aioscpy[all]
+
+# 安装额外的库
+pip install aioscpy[aiohttp,httpx]
 ```
 
 ### 用法

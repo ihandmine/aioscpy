@@ -28,7 +28,17 @@ Distributed crawling/scraping.
 The quick way:
 
 ```shell
+# default
 pip install aioscpy
+
+# at latest version
+pip install git+https://github.com/ihandmine/aioscpy
+
+# install all dependencies 
+pip install aioscpy[all]
+
+# install extra packages
+pip install aioscpy[aiohttp,httpx]
 ```
 
 ### Usage
