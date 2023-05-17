@@ -71,6 +71,23 @@ class UploadCommand(Command):
         sys.exit()
 
 
+extras_require = {
+    "all": [
+        "aiohttp",
+        "httpx",
+        "anti-header",
+        "w3lib",
+        "parsel",
+        "PyDispatcher",
+        "redis",
+        "anyio",
+        "ujson"
+    ],
+    "aiohttp": ["aiohttp", "cryptography"],
+    "httpx": ["httpx[http2]>=0.23.0"],
+}
+
+
 setup(
     name=NAME,
     version=VERSION,
@@ -86,8 +103,10 @@ setup(
         "parsel",
         "PyDispatcher",
         "redis",
-        "anyio"
+        "anyio",
+        "ujson"
     ],
+    extras_require=extras_require,
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/markdown',
