@@ -21,7 +21,7 @@ class Slot:
     def add_response_request(self, response, request):
         self.queue.append((response, request))
         self.active.add(request)
-        if hasattr(response, 'body'):
+        if hasattr(response, 'body') and response.body is not None:
             self.active_size += max(len(response.body), self.MIN_RESPONSE_SIZE)
 
     def next_response_request_deferred(self):
@@ -31,7 +31,7 @@ class Slot:
     def finish_response(self, request, response):
         self.active.discard(request)
         # self.logger.warning(f'start finish response active del: {self.active_size}, active: {len(self.active)}, response: {len(response.body)}')
-        if hasattr(response, 'body'):
+        if hasattr(response, 'body') and response.body is not None:
             self.active_size -= max(len(response.body), self.MIN_RESPONSE_SIZE)
         request, response = None, None        
 
