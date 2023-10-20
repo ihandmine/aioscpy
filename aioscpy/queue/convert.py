@@ -38,7 +38,9 @@ def request_to_dict(request, spider=None):
         'flags': request.flags,
         'cb_kwargs': request.cb_kwargs,
     }
-    if type(request) == "JsonRequest":
+    _body = getattr(request, "body")
+    _json = getattr(request, "json")
+    if _body and isinstance(_body, dict) or _json and isinstance(_json, dict):
         base_cls = request.__class__.__bases__[0]
         d['_class'] = base_cls.__module__ + '.' + base_cls.__name__
     return d
@@ -58,8 +60,11 @@ def request_from_dict(d, spider=None):
         eb = _get_method(spider, eb)
     request_cls = load_object(d['_class']) if '_class' in d else Request
 
-    if request_cls.__name__ == "JsonRequest":
-        _body = json.loads(d.get('body', ""))
+    _json = None
+    if request_cls.__name__ in ["FormRequest"]:
+        _body = json.loads(d['body']) if d.get('body') else None
+    elif request_cls.__name__ in ["JsonRequest"]:
+        _json = json.loads(d['json']) if d.get('json') else None
     else:
         _body = d.get('body', None)
     return call_grace_instance(
@@ -70,6 +75,7 @@ def request_from_dict(d, spider=None):
             method=d.get('method', 'GET'),
             headers=Headers(d.get('headers', {})),
             body=_body,
+            json=_json,
             cookies=d.get('cookies'),
             meta=d.get('meta'),
             encoding=d.get('_encoding', 'utf-8'),
