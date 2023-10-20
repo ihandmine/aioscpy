@@ -60,13 +60,18 @@ def request_from_dict(d, spider=None):
         eb = _get_method(spider, eb)
     request_cls = load_object(d['_class']) if '_class' in d else Request
 
-    _json = None
+    _json, _body = None, None
     if request_cls.__name__ in ["FormRequest"]:
-        _body = json.loads(d['body']) if d.get('body') else None
+        if d.get('body') and isinstance(d.get('body'), dict):
+            _body = d['body']
+        elif d.get('body') and isinstance(d.get('body'), str):
+            _body = json.loads(d['body'])
     elif request_cls.__name__ in ["JsonRequest"]:
-        _json = json.loads(d['json']) if d.get('json') else None
-    else:
-        _body = d.get('body', None)
+        if d.get('json') and isinstance(d.get('json'), dict):
+            _json = d['json']
+        elif d.get('json') and isinstance(d.get('json'), str):
+            _json = json.loads(d['json'])
+
     return call_grace_instance(
             request_cls,
             url=to_unicode(d['url']),

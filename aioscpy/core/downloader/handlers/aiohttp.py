@@ -1,6 +1,8 @@
 import asyncio
 import ssl
 import aiohttp
+import ujson
+import json
 
 from anti_header import Headers
 from anti_useragent.utils.cipers import generate_cipher
@@ -14,6 +16,7 @@ class AioHttpDownloadHandler(object):
         self.aiohttp_client_session = {
             'timeout': aiohttp.ClientTimeout(total=20),
             'trust_env': True,
+            'json_serialize': ujson.dumps,
             "connector": aiohttp.TCPConnector(
                 verify_ssl=False,
                 limit=1000,
@@ -39,12 +42,9 @@ class AioHttpDownloadHandler(object):
         session_kwargs = {
             'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
             'cookies': dict(request.cookies),
+            "data": request.body,
+            "json": request.json
         }
-        if isinstance(request.body, dict):
-            session_kwargs['json'] = request.body or None
-        else:
-            session_kwargs['data'] = request.body or None
-        
         headers = request.headers
         if isinstance(headers, Headers):
             headers = headers.to_unicode_dict()

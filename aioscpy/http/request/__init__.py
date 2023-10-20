@@ -8,16 +8,19 @@ class Request(object):
                  method='GET',
                  headers=None,
                  body=None,
+                 json=None,
                  cookies=None,
                  meta=None,
                  encoding='utf-8',
                  priority=0,
                  dont_filter=False,
                  errback=None, flags=None, cb_kwargs=None):
-        self._encoding = encoding  # this one has to be set first
+        self._encoding = encoding
         self.method = str(method).upper()
         self._set_url(url)
         self._set_body(body)
+        self._set_json(json)
+
         assert isinstance(priority, int), "Request priority not an integer: %r" % priority
         self.priority = priority
 
@@ -73,12 +76,17 @@ class Request(object):
         return self._body
 
     def _set_body(self, body):
-        if body is None:
-            self._body = b''
-        else:
-            self._body = body
+        self._body = body or None
 
     body = property(_get_body, _set_body)
+
+    def _get_json(self):
+        return self._json
+    
+    def _set_json(self, json):
+        self._json = json or None
+
+    json = property(_get_json, _set_json)
 
     @property
     def encoding(self):

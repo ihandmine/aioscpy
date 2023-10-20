@@ -35,12 +35,10 @@ class RequestsDownloadHandler(object):
             'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
             'cookies': dict(request.cookies),
             'headers': headers,
-            'allow_redirects': request.meta.get("allow_redirects", True)
+            'allow_redirects': request.meta.get("allow_redirects", True),
+            "data": request.body,
+            "json": request.json,
         }
-        if isinstance(request.body, dict):
-            requests_client_session['json'] = request.body or None
-        else:
-            requests_client_session['data'] = request.body or None
         
         response = await asyncio.to_thread(requests.request, request.method, request.url, **requests_client_session)
 

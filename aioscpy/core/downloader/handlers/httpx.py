@@ -39,12 +39,14 @@ class HttpxDownloadHandler(object):
             'timeout': self.settings.get('DOWNLOAD_TIMEOUT'),
             'cookies': dict(request.cookies),
             'headers': headers,
-            'follow_redirects': True
+            'follow_redirects': True,
+            "data": request.body,
+            "json": request.json
         }
-        if isinstance(request.body, dict):
-            session_kwargs['json'] = request.body or None
-        else:
-            session_kwargs['data'] = request.body or None
+        # if isinstance(request.body, dict):
+        #     session_kwargs['json'] = request.body or None
+        # else:
+        #     session_kwargs['data'] = request.body or None
         
         async with httpx.AsyncClient(**httpx_client_session) as session:
             response = await session.request(request.method, request.url, **session_kwargs)
