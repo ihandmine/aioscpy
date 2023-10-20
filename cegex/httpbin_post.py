@@ -1,5 +1,6 @@
 from aioscpy.spider import Spider
 from aioscpy import call_grace_instance
+from aioscpy.http import FormRequest
 
 
 class HttpBinPostSpider(Spider):
@@ -15,8 +16,8 @@ class HttpBinPostSpider(Spider):
         : request usage description:
         <form_request>: data = body
             [header]: Content-Type: application/x-www-form-urlencoded
-            [method]: GET or POST
-            [body]: a=1&b=1 or 
+            [method]: POST
+            [body]:
                   {
                     'a': 1,
                     'b': 2
@@ -32,8 +33,9 @@ class HttpBinPostSpider(Spider):
         """
         for url in self.start_urls:
             yield call_grace_instance(
+                FormRequest,
                 # self.di.get('form_request'), 
-                self.di.get('json_request'), 
+                # self.di.get('json_request'), 
                 url, 
                 method='POST',
                 formdata={"b": '11'}
