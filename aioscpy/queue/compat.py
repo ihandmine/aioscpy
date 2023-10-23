@@ -12,12 +12,15 @@ def _request_byte2str(obj):
         _body = json.dumps(obj['body'])
     else:
         _body = obj['body']
+    _headers = {}
+    for k, v in obj['headers'].items():
+        if isinstance(k, bytes) or isinstance(v, bytes):
+            _headers.update({to_unicode(k, encoding=_encoding): to_unicode(b','.join(v), encoding=_encoding)})
+        else:
+            _headers.update({k: v})
     obj.update({
         'body': _body,
-        'headers': {
-            to_unicode(k, encoding=_encoding): to_unicode(b','.join(v), encoding=_encoding)
-            for k, v in obj['headers'].items()
-        }
+        'headers': _headers
     })
     return obj
 
