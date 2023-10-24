@@ -20,7 +20,7 @@ def load_file_to_execute():
 
 def load_name_to_execute():
     process = call_grace_instance("crawler_process", get_project_settings())
-    process.crawl('baidu', path="./cegex")
+    process.crawl('ja3', path="./cegex")
     process.start()
 
 
