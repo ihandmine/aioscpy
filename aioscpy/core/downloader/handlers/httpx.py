@@ -11,7 +11,7 @@ class HttpxDownloadHandler(object):
     def __init__(self, settings, crawler):
         self.settings = settings
         self.crawler = crawler
-        self.context = ssl.create_default_context()
+        self.context = None
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -28,6 +28,7 @@ class HttpxDownloadHandler(object):
         httpx_client_session = {}
 
         if request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS'):
+            self.context = ssl.create_default_context()
             self.context.set_ciphers(generate_cipher())
             httpx_client_session['verify'] = self.context
 

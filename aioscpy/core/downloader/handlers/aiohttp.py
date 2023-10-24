@@ -28,7 +28,7 @@ class AioHttpDownloadHandler(object):
         }
         self.session_stats = self.settings.getbool("REQUESTS_SESSION_STATS", False)
         self.session = None
-        self.context = ssl.create_default_context()
+        self.context = None
 
     @classmethod
     def from_settings(cls, settings, crawler):
@@ -51,6 +51,7 @@ class AioHttpDownloadHandler(object):
         session_kwargs['headers'] = headers
 
         if request.meta.get('TLS_CIPHERS') or self.settings.get('TLS_CIPHERS'):
+            self.context = ssl.create_default_context()
             self.context.set_ciphers(generate_cipher())
             session_kwargs['ssl'] = self.context
 
