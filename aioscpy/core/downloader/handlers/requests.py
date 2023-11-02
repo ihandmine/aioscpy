@@ -42,7 +42,7 @@ class RequestsDownloadHandler(object):
         if request.meta.get("proxy"):
             requests_client_session['proxies'] = {
                 'http': request.meta["proxy"],
-                'https': request.meta["proxy"]
+                'https': request.meta["proxy"].replace('http', 'https')
             }
             self.logger.debug(f"use {request.meta['proxy']} crawling: {request.url}")
 
