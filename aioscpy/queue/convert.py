@@ -30,6 +30,7 @@ def request_to_dict(request, spider=None):
         'method': request.method,
         'headers': dict(request.headers),
         'body': request.body,
+        'json': request.json,
         'cookies': request.cookies,
         'meta': request.meta,
         '_encoding': request._encoding,
