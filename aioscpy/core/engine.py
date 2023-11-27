@@ -246,5 +246,6 @@ class ExecutionEngine(object):
                 for request in await self.slot.scheduler.async_next_request():
                     self.slot.add_request(request)
                     await self.downloader.fetch(request)
+                await asyncio.sleep(0.2)
                 local_lock = True
             await asyncio.sleep(1)
