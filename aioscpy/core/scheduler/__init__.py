@@ -19,9 +19,14 @@ class Scheduler(object):
         await self.queue.push(request)
         return True
 
-    async def async_next_request(self):
-        _results = await self.queue.pop(count=100)
-        self.stats.inc_value('scheduler/dequeued/redis', count=len(_results), spider=self.spider)
+    async def async_next_request(self, count=None):
+        # Use the provided count or get from settings
+        if count is None:
+            count = getattr(self.spider, 'settings', {}).get('TASK_BEAT_BATCH_SIZE', 100)
+
+        _results = await self.queue.pop(count=count)
+        if self.stats and _results:
+            self.stats.inc_value('scheduler/dequeued/redis', count=len(_results), spider=self.spider)
         return _results
 
     async def open(self, start_requests):
