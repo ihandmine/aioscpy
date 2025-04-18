@@ -1,21 +1,40 @@
 BOT_NAME = "aioscpy"
 
+# Concurrency settings
 CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 8
 CONCURRENT_REQUESTS_PER_IP = 0
-RANDOMIZE_DOWNLOAD_DELAY = True
-
 CONCURRENT_ITEMS = 16
 
+# Adaptive concurrency settings
+ADAPTIVE_CONCURRENCY_ENABLED = False
+ADAPTIVE_CONCURRENCY_TARGET_RESPONSE_TIME = 1.0  # seconds
+ADAPTIVE_CONCURRENCY_MIN_REQUESTS = 8
+ADAPTIVE_CONCURRENCY_MAX_REQUESTS = 32
+ADAPTIVE_CONCURRENCY_WINDOW_SIZE = 20
+ADAPTIVE_CONCURRENCY_ADJUSTMENT_INTERVAL = 10  # seconds
+
+# Download settings
 DOWNLOAD_DELAY = 0
 DOWNLOAD_TIMEOUT = 20
+RANDOMIZE_DOWNLOAD_DELAY = True
+
+# Memory optimization settings
+GC_ENABLED = True
+GC_FREQUENCY = 10  # Run garbage collection every 10 heartbeats
+
+# Task beat settings
+TASK_BEAT_ACTIVE_SLEEP = 0.2  # Sleep when active (seconds)
+TASK_BEAT_IDLE_SLEEP = 1.0    # Sleep when idle (seconds)
+TASK_BEAT_BATCH_SIZE = 100    # Max requests per batch
+
+# Handler and scheduler settings
 # DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.aiohttp.AioHttpDownloadHandler"
 DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.httpx.HttpxDownloadHandler"
 # DOWNLOAD_HANDLER = "aioscpy.core.downloader.handlers.requests.RequestsDownloadHandler"
 # SCHEDULER = "aioscpy.core.scheduler.redis.RedisScheduler"
 SCHEDULER = "aioscpy.core.scheduler.memory.MemoryScheduler"
 REQUESTS_SESSION_STATS = False
-
 
 SPIDER_IDLE = False
 
@@ -84,6 +103,7 @@ EXTENSIONS_BASE = {
 
 DOWNLOADER_MIDDLEWARES_BASE = {
     # Engine side
+    'aioscpy.middleware.adaptive_concurrency.AdaptiveConcurrencyMiddleware': 500,
     'aioscpy.libs.downloadermiddlewares.stats.DownloaderStats': 850,
     # Downloader side
 }
